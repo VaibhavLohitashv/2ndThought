@@ -1,0 +1,23 @@
+<div class="modal-backdrop">
+    <div class="modal-card">
+        <h3 class="modal-title">Create Thread</h3>
+
+        <label class="field">
+            <div class="label">Title</div>
+            <input type="text" [(ngModel)]="title" [disabled]="loading" placeholder="Thread title" />
+        </label>
+
+        <label class="field">
+            <div class="label">Description (optional)</div>
+            <textarea rows="4" [(ngModel)]="description" [disabled]="loading"
+                placeholder="Short description..."></textarea>
+        </label>
+
+        <div class="actions">
+            <button class="btn btn-ghost" (click)="close()" [disabled]="loading">Cancel</button>
+            <button class="btn btn-primary" (click)="submit()" [disabled]="loading || !title">Create</button>
+        </div>
+
+        <div *ngIf="error" class="error">{{ error }}</div>
+    </div>
+</div>

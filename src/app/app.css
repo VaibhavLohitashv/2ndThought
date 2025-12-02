@@ -1,0 +1,38 @@
+/* App-level layout for minimalist flat UI */
+main {
+    min-height: 100vh;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    padding: 2rem;
+}
+
+.content {
+    width: 100%;
+    max-width: 900px;
+    background: var(--surface);
+    border: 1px solid #e6e7ea;
+    padding: 1.25rem;
+    border-radius: 0
+}
+
+.left-side,
+.right-side {
+    padding: 0.5rem
+}
+
+.divider {
+    width: 1px;
+    background: #e6e7ea
+}
+
+h1 {
+    margin: 0 0 0.5rem 0;
+    font-size: 1.75rem
+}
+
+p {
+    margin: 0
+}
+
+/* component-specific styles moved to their files */

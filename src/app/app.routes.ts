@@ -15,11 +15,16 @@ export const routes: Routes = [
         loadComponent: () => import('./pages/protected/protected').then(m => m.ProtectedComponent)
     },
     {
+        path: 'threads',
+        canActivate: [AuthGuard],
+        loadComponent: () => import('./pages/threads/threads').then(m => m.ThreadsComponent)
+    },
+    {
         path: 'profile',
         canActivate: [AuthGuard],
         loadComponent: () => import('./pages/profile/profile').then(m => m.ProfileComponent)
     },
-    { path: '', redirectTo: 'protected', pathMatch: 'full' },
+    { path: '', redirectTo: 'threads', pathMatch: 'full' },
 ];
 
 export const routerProviders = [

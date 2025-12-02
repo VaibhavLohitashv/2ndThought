@@ -1,0 +1,33 @@
+.profile-root {
+    padding: 1rem;
+    max-width: 800px
+}
+
+.profile-meta {
+    display: flex;
+    gap: 1rem;
+    align-items: center
+}
+
+.profile-meta img {
+    width: 96px;
+    height: 96px;
+    object-fit: cover
+}
+
+.profile-form {
+    margin-top: 1rem
+}
+
+.profile-form label {
+    display: block;
+    margin-top: 0.5rem
+}
+
+.profile-threads {
+    margin-top: 1.25rem
+}
+
+.profile-threads li {
+    margin-bottom: 0.5rem
+}

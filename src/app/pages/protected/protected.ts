@@ -5,13 +5,8 @@ import { AuthService } from '../../services/auth/auth';
 @Component({
     selector: 'app-protected',
     standalone: true,
-    template: `
-    <div style="padding:1rem">
-      <h2>Protected Page</h2>
-      <p>You are signed in.</p>
-      <button (click)="signOut()">Sign Out</button>
-    </div>
-  `,
+    templateUrl: './protected.html',
+    styleUrls: ['./protected.css'],
     imports: []
 })
 export class ProtectedComponent {

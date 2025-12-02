@@ -1,0 +1,20 @@
+<div class="threads-page container">
+    <h2>Threads</h2>
+    <div *ngIf="loading">Loading...</div>
+    <div *ngIf="!loading && threads.length===0">No threads yet. Create one!</div>
+    <div class="grid" *ngIf="!loading">
+        <div class="card new" (click)="openCreate()">
+            <div class="card-title">
+                <div class="plus">+</div>
+            </div>
+        </div>
+
+        <div class="card" *ngFor="let t of threads" (click)="openThread(t.id)">
+            <div class="card-title">{{ t.title }}</div>
+            <div class="card-desc muted">{{ t.description || 'No description' }}</div>
+            <div class="card-meta">Created by: {{ t.created_by_name || 'Unknown' }}</div>
+        </div>
+    </div>
+
+    <app-create-thread-modal *ngIf="showCreate" (created)="onCreated()" (closed)="onClose()"></app-create-thread-modal>
+</div>

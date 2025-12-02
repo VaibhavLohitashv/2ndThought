@@ -12,13 +12,13 @@ import { HttpClient, HttpHeaders } from '@angular/common/http';
     standalone: true,
     imports: [CommonModule, FormsModule],
     template: `
-        <div style="padding:1rem; max-width:800px">
+        <div class="profile-root">
             <h2>Profile</h2>
             <div *ngIf="loading">Loading...</div>
 
             <div *ngIf="!loading">
-                <div style="display:flex; gap:1rem; align-items:center">
-                    <img *ngIf="profile.avatar_url" [src]="profile.avatar_url" alt="avatar" width="96" height="96" style="border-radius:8px; object-fit:cover" />
+                <div class="profile-meta">
+                    <img *ngIf="profile.avatar_url" [src]="profile.avatar_url" alt="avatar" />
                     <div>
                         <div><strong>Email:</strong> {{ profile.email || '-' }}</div>
                         <div><strong>Firebase UID:</strong> {{ profile.firebase_uid || '-' }}</div>
@@ -26,36 +26,35 @@ import { HttpClient, HttpHeaders } from '@angular/common/http';
                     </div>
                 </div>
 
-                <form style="margin-top:1rem" (ngSubmit)="save()">
+                <form class="profile-form" (ngSubmit)="save()">
                     <label>
                         Full name
                         <input [(ngModel)]="profile.full_name" name="full_name" />
                     </label>
-                    <br />
                     <label>
                         Avatar URL
                         <input [(ngModel)]="profile.avatar_url" name="avatar_url" />
                     </label>
-                    <br />
                     <button type="submit">Save</button>
                     <button type="button" (click)="signOut()">Sign Out</button>
                 </form>
 
-                <section style="margin-top:1.25rem">
+                <section class="profile-threads">
                     <h3>Threads</h3>
                     <div *ngIf="!profile.threads || profile.threads.length === 0">You haven't joined any threads yet.</div>
                     <ul>
                         <li *ngFor="let t of profile.threads">
                             <strong>{{ t.thread_title }}</strong> — <em>{{ t.role }}</em>
-                            <div style="font-size:0.9rem; color:gray">Joined: {{ t.joined_at | date:'medium' }}</div>
+                            <div class="muted">Joined: {{ t.joined_at | date:'medium' }}</div>
                         </li>
                     </ul>
                 </section>
 
-                <div *ngIf="error" style="color:tomato; margin-top:0.5rem">{{ error }}</div>
+                <div *ngIf="error" class="error">{{ error }}</div>
             </div>
         </div>
-  `
+  `,
+    styleUrls: ['./profile.css']
 })
 export class ProfileComponent {
     loading = true;
