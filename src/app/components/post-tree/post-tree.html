@@ -1,0 +1,29 @@
+<ng-template #renderPost let-p>
+    <div class="post">
+        <div class="post-user">{{ p.user.full_name || p.user.email }}</div>
+        <div class="post-content">{{ p.content }}</div>
+        <div class="post-actions">
+            <button (click)="toggleReply(p.id)">Reply</button>
+        </div>
+
+        <div class="reply-box" *ngIf="replyOpen[p.id]">
+            <textarea rows="3" [(ngModel)]="replyContent[p.id]"></textarea>
+            <div class="actions">
+                <button class="btn" (click)="toggleReply(p.id)">Cancel</button>
+                <button class="btn btn-primary" (click)="replyTo(p.id)"
+                    [disabled]="replying[p.id] || !(replyContent[p.id] && replyContent[p.id].trim())">Reply</button>
+            </div>
+            <div *ngIf="replyError[p.id]" class="error">{{ replyError[p.id] }}</div>
+        </div>
+
+        <div class="post-children" *ngIf="p.children && p.children.length>0">
+            <ng-container *ngFor="let c of p.children">
+                <ng-container *ngTemplateOutlet="renderPost; context: { $implicit: c }"></ng-container>
+            </ng-container>
+        </div>
+    </div>
+</ng-template>
+
+<ng-container *ngFor="let p of posts">
+    <ng-container *ngTemplateOutlet="renderPost; context: { $implicit: p }"></ng-container>
+</ng-container>

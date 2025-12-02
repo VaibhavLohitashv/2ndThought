@@ -20,6 +20,11 @@ export const routes: Routes = [
         loadComponent: () => import('./pages/threads/threads').then(m => m.ThreadsComponent)
     },
     {
+        path: 'threads/:id',
+        canActivate: [AuthGuard],
+        loadComponent: () => import('./pages/thread-details/thread-detail').then(m => m.ThreadDetail)
+    },
+    {
         path: 'profile',
         canActivate: [AuthGuard],
         loadComponent: () => import('./pages/profile/profile').then(m => m.ProfileComponent)

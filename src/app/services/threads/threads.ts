@@ -23,4 +23,9 @@ export class ThreadsService {
         const obs = this.http.post(`${this.base}/threads`, data, { headers: this.headers() });
         return firstValueFrom(obs) as Promise<any>;
     }
+
+    async getThread(threadId: number) {
+        const obs = this.http.get(`${this.base}/threads/${threadId}`, { headers: this.headers() });
+        return firstValueFrom(obs) as Promise<any>;
+    }
 }

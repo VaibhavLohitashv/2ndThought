@@ -1,0 +1,127 @@
+.thread-detail {
+    padding: 1rem;
+    max-width: 900px
+}
+
+.thread-detail .back {
+    border: none;
+    background: none;
+    color: #2563eb;
+    cursor: pointer;
+    margin-bottom: 8px
+}
+
+.thread-detail h2 {
+    margin: 0 0 6px 0
+}
+
+.thread-detail .muted {
+    color: var(--muted);
+    margin-bottom: 8px
+}
+
+.thread-detail .meta {
+    font-size: 13px;
+    color: var(--muted);
+    margin-bottom: 12px
+}
+
+.members {
+    margin-top: 12px;
+    border-top: 1px solid #eef2f6;
+    padding-top: 12px
+}
+
+.tabs {
+    display: flex;
+    gap: 8px;
+    margin-top: 12px;
+}
+
+.tabs button {
+    border: none;
+    background: #f3f4f6;
+    padding: 8px 12px;
+    cursor: pointer
+}
+
+.tabs button.active {
+    background: #2563eb;
+    color: #fff
+}
+
+.posts {
+    margin-top: 12px;
+    border-top: 1px solid #eef2f6;
+    padding-top: 12px
+}
+
+.post {
+    border: 1px solid #e6e7ea;
+    padding: 10px;
+    margin-bottom: 8px
+}
+
+.post.child {
+    margin-left: 12px;
+    background: #fafafa
+}
+
+.post-children {
+    margin-top: 8px;
+    margin-left: 12px
+}
+
+.post-actions {
+    margin-top: 8px
+}
+
+.reply-box {
+    margin-top: 8px;
+    border-top: 1px dashed #e6e7ea;
+    padding-top: 8px
+}
+
+.reply-box textarea {
+    width: 100%;
+    padding: 8px;
+    box-sizing: border-box
+}
+
+.post-user {
+    font-weight: 700;
+    font-size: 13px
+}
+
+.post-content {
+    margin-top: 6px
+}
+
+.create-post textarea {
+    width: 100%;
+    padding: 8px;
+    box-sizing: border-box
+}
+
+.actions {
+    display: flex;
+    gap: 8px;
+    justify-content: flex-end;
+    margin-top: 8px
+}
+
+.btn {
+    padding: 8px 12px;
+    border: none;
+    cursor: pointer
+}
+
+.btn-primary {
+    background: #2563eb;
+    color: #fff
+}
+
+.error {
+    color: #b91c1c;
+    margin-top: 8px
+}

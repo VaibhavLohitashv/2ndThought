@@ -1,0 +1,44 @@
+<div class="thread-detail container">
+    <button class="back" (click)="back()">← Back</button>
+
+    <div *ngIf="loading">Loading...</div>
+
+    <div *ngIf="!loading && thread">
+        <h2>{{ thread.title }}</h2>
+        <div class="muted">{{ thread.description }}</div>
+        <div class="meta">Created by: {{ thread.created_by_name || thread.created_by || 'Unknown' }}</div>
+
+        <nav class="tabs">
+            <button [class.active]="activeTab==='posts'" (click)="activeTab='posts'">Posts</button>
+            <button [class.active]="activeTab==='create'" (click)="activeTab='create'">Create post</button>
+            <button [class.active]="activeTab==='members'" (click)="activeTab='members'">Members</button>
+        </nav>
+
+        <section *ngIf="activeTab==='posts'" class="posts">
+            <h3>Posts</h3>
+            <div *ngIf="posts.length===0">No posts yet</div>
+            <div class="post-list">
+                <app-post-tree [posts]="posts" (updated)="load()"></app-post-tree>
+            </div>
+        </section>
+
+        <section *ngIf="activeTab==='create'" class="create-post">
+            <h3>Create Post</h3>
+            <textarea rows="6" [(ngModel)]="newPostContent" placeholder="Write your post..."></textarea>
+            <div class="actions">
+                <button class="btn" (click)="activeTab='posts'">Cancel</button>
+                <button class="btn btn-primary" (click)="createPost()"
+                    [disabled]="creatingPost || !newPostContent">Post</button>
+            </div>
+            <div *ngIf="postError" class="error">{{ postError }}</div>
+        </section>
+
+        <section *ngIf="activeTab==='members'" class="members">
+            <h3>Members</h3>
+            <div *ngIf="thread.members?.length===0">No members yet</div>
+            <ul>
+                <li *ngFor="let m of thread.members">{{ m.user_full_name || ('User ' + m.user_id) }} — {{ m.role }}</li>
+            </ul>
+        </section>
+    </div>
+</div>
