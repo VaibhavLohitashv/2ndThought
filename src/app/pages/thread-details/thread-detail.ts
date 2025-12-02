@@ -32,7 +32,15 @@ export class ThreadDetail {
         private http: HttpClient,
         private auth: AuthService
     ) {
+        this.auth.user$.subscribe((u) => {
+            // trigger UI update when auth changes
+        });
         this.load();
+    }
+
+    // expose token for template use via a public getter
+    public get idToken(): string | null {
+        return this.auth.getIdToken();
     }
 
     async load() {
@@ -81,6 +89,35 @@ export class ThreadDetail {
             this.postError = err?.message || 'Could not create post';
         } finally {
             this.creatingPost = false;
+        }
+    }
+
+    isMember(): boolean {
+        if (!this.thread || !this.thread.members) return false;
+        const user = this.auth.user$.value;
+        if (!user) return false;
+        // try to match by email or displayName
+        return this.thread.members.some((m: any) => {
+            if (m.user_full_name && user.displayName && m.user_full_name === user.displayName) return true;
+            if (m.email && user.email && m.email === user.email) return true;
+            // fallback: if server populated email in members (unlikely), match
+            return false;
+        });
+    }
+
+    async joinThread() {
+        const id = Number(this.route.snapshot.paramMap.get('id'));
+        if (!id) return;
+        try {
+            const token = this.auth.getIdToken();
+            const headers = token ? new HttpHeaders({ Authorization: `Bearer ${token}` }) : undefined;
+            const obs = this.http.post(`http://localhost:8000/threads/${id}/join`, {}, { headers });
+            await firstValueFrom(obs);
+            // reload thread and posts
+            await this.load();
+            this.activeTab = 'posts';
+        } catch (err: any) {
+            console.error('join error', err);
         }
     }
 

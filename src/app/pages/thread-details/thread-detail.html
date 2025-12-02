@@ -7,6 +7,11 @@
         <h2>{{ thread.title }}</h2>
         <div class="muted">{{ thread.description }}</div>
         <div class="meta">Created by: {{ thread.created_by_name || thread.created_by || 'Unknown' }}</div>
+        <div class="meta-actions">
+            <button *ngIf="!isMember()" class="btn btn-primary" (click)="joinThread()"
+                [disabled]="!idToken">Join</button>
+            <div *ngIf="isMember()" class="muted">You are a member</div>
+        </div>
 
         <nav class="tabs">
             <button [class.active]="activeTab==='posts'" (click)="activeTab='posts'">Posts</button>
