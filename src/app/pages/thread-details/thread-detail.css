@@ -129,3 +129,79 @@
     color: #b91c1c;
     margin-top: 8px
 }
+
+.meta-message {
+    display: inline-block;
+    margin-left: 12px;
+    padding: 6px 10px;
+    border-radius: 6px;
+    font-size: 13px;
+}
+
+.meta-message.success {
+    background: #ecfdf5;
+    color: #065f46;
+    border: 1px solid #bbf7d0;
+}
+
+.meta-message.error {
+    background: #fff1f2;
+    color: #9f1239;
+    border: 1px solid #fca5a5;
+}
+
+/* simple modal */
+.modal-backdrop {
+    position: fixed;
+    left: 0;
+    top: 0;
+    right: 0;
+    bottom: 0;
+    background: rgba(0, 0, 0, 0.35);
+    display: flex;
+    align-items: center;
+    justify-content: center;
+}
+
+.modal {
+    background: #fff;
+    padding: 16px;
+    border-radius: 8px;
+    max-width: 420px;
+    width: 90%;
+    box-shadow: 0 8px 24px rgba(15, 23, 42, 0.12);
+}
+
+.modal-actions {
+    display: flex;
+    justify-content: flex-end;
+    gap: 8px;
+    margin-top: 12px;
+}
+
+.admin-panel {
+    margin-top: 12px;
+    border-top: 1px solid #eef2f6;
+    padding-top: 12px;
+}
+
+.members-table {
+    width: 100%;
+    border-collapse: collapse;
+    margin-top: 8px;
+}
+
+.members-table th,
+.members-table td {
+    text-align: left;
+    padding: 8px;
+    border-bottom: 1px solid #eef2f6;
+}
+
+.members-table thead th {
+    font-weight: 700;
+}
+
+.members-table button {
+    padding: 6px 10px;
+}

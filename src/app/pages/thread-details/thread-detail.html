@@ -10,13 +10,24 @@
         <div class="meta-actions">
             <button *ngIf="!isMember()" class="btn btn-primary" (click)="joinThread()"
                 [disabled]="!idToken">Join</button>
-            <div *ngIf="isMember()" class="muted">You are a member</div>
+            <div *ngIf="isMember()" style="display:flex;gap:8px;align-items:center;">
+                <div class="muted">You are a member</div>
+                <button class="btn" (click)="confirmLeave()">Leave</button>
+            </div>
+
+            <div *ngIf="metaMessage" class="meta-message" [ngClass]="metaMessage.type">
+                {{ metaMessage.text }}
+            </div>
         </div>
 
         <nav class="tabs">
             <button [class.active]="activeTab==='posts'" (click)="activeTab='posts'">Posts</button>
-            <button [class.active]="activeTab==='create'" (click)="activeTab='create'">Create post</button>
-            <button [class.active]="activeTab==='members'" (click)="activeTab='members'">Members</button>
+            <button *ngIf="isMember()" [class.active]="activeTab==='create'" (click)="activeTab='create'">Create
+                post</button>
+            <button *ngIf="isMember()" [class.active]="activeTab==='members'"
+                (click)="activeTab='members'">Members</button>
+            <button *ngIf="isAdmin()" [class.active]="activeTab==='admin'" (click)="activeTab='admin'">Admin
+                Panel</button>
         </nav>
 
         <section *ngIf="activeTab==='posts'" class="posts">
@@ -26,6 +37,18 @@
                 <app-post-tree [posts]="posts" (updated)="load()"></app-post-tree>
             </div>
         </section>
+
+        <!-- Leave confirmation modal -->
+        <div class="modal-backdrop" *ngIf="showLeaveConfirm">
+            <div class="modal">
+                <h4>Leave thread</h4>
+                <p>Are you sure you want to leave this thread? You will lose membership.</p>
+                <div class="modal-actions">
+                    <button class="btn" (click)="showLeaveConfirm=false">Cancel</button>
+                    <button class="btn btn-primary" (click)="leaveConfirmed()">Leave</button>
+                </div>
+            </div>
+        </div>
 
         <section *ngIf="activeTab==='create'" class="create-post">
             <h3>Create Post</h3>
@@ -44,6 +67,36 @@
             <ul>
                 <li *ngFor="let m of thread.members">{{ m.user_full_name || ('User ' + m.user_id) }} — {{ m.role }}</li>
             </ul>
+        </section>
+
+        <section *ngIf="activeTab==='admin'" class="admin-panel">
+            <h3>Admin Panel</h3>
+            <div *ngIf="!isAdmin()" class="error">Only thread admins can view this panel.</div>
+            <table *ngIf="isAdmin()" class="members-table">
+                <thead>
+                    <tr>
+                        <th>Rank</th>
+                        <th>Name</th>
+                        <!-- <th>Current rank</th> -->
+                        <th>Action</th>
+                    </tr>
+                </thead>
+                <tbody>
+                    <tr *ngFor="let m of thread.members">
+                        <td>{{ m.role }}</td>
+                        <td>{{ m.user_full_name || ('User ' + m.user_id) }}</td>
+                        <!-- <td>{{ m.role }}</td> -->
+                        <td>
+                            <button class="btn btn-primary" (click)="promoteMember(m.user_id)"
+                                [disabled]="!isAdmin() || m.role === 'admin'"
+                                [title]="!isAdmin() ? 'Only admins can promote' : (m.role === 'moderator' || m.role === 'admin' ? 'Already admin' : 'Promote to moderator')">Promote</button>
+                            <button class="btn" (click)="demoteMember(m.user_id)"
+                                [disabled]="!isAdmin() || m.role === 'member' || (m.role === 'admin' && countAdmins() <= 1)"
+                                [title]="!isAdmin() ? 'Only admins can demote' : (m.role === 'member' ? 'No lower role' : (m.role === 'admin' && countAdmins() <= 1 ? 'Cannot demote the only admin' : 'Demote to member'))">Demote</button>
+                        </td>
+                    </tr>
+                </tbody>
+            </table>
         </section>
     </div>
 </div>

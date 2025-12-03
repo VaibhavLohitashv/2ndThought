@@ -1,33 +1,90 @@
 .profile-root {
     padding: 1rem;
-    max-width: 800px
+    max-width: 900px;
 }
 
-.profile-meta {
+.profile-header {
     display: flex;
+    align-items: center;
+    justify-content: space-between;
     gap: 1rem;
-    align-items: center
 }
 
-.profile-meta img {
-    width: 96px;
-    height: 96px;
-    object-fit: cover
+.profile-body {
+    display: flex;
+    flex-direction: column;
+    gap: 1rem;
+    margin-top: 1rem;
+}
+
+.profile-top {
+    display: grid;
+    grid-template-columns: 30% 70%
+}
+
+.profile-card {
+    background: var(--surface);
+    padding: 1rem;
+    border: 1px solid #e6e7ea;
+}
+
+.avatar img {
+    height: 100%;
+    width: max-content;
+    object-fit: cover;
+    display: block;
+}
+
+.avatar-placeholder {
+    width: 128px;
+    height: 128px;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    background: #eef2ff;
+    color: var(--primary);
+    font-size: 48px;
+}
+
+.profile-info {
+    padding-top: 0.5rem
+}
+
+.profile-info .row {
+    margin-bottom: 0.5rem
+}
+
+.card {
+    background: var(--surface);
+    padding: 1rem;
+    border: 1px solid #e6e7ea
 }
 
 .profile-form {
-    margin-top: 1rem
+    display: block
 }
 
 .profile-form label {
     display: block;
-    margin-top: 0.5rem
+    margin-top: 0.75rem
+}
+
+.form-actions {
+    margin-top: 1rem;
+    display: flex;
+    gap: 0.5rem
 }
 
 .profile-threads {
-    margin-top: 1.25rem
+    grid-column: 1 / span 2;
+    margin-top: 0
+}
+
+.profile-threads ul {
+    margin: 0;
+    padding-left: 1rem
 }
 
 .profile-threads li {
-    margin-bottom: 0.5rem
+    margin-bottom: 0.75rem
 }

@@ -28,4 +28,29 @@ export class ThreadsService {
         const obs = this.http.get(`${this.base}/threads/${threadId}`, { headers: this.headers() });
         return firstValueFrom(obs) as Promise<any>;
     }
+
+    async getPosts(threadId: number) {
+        const obs = this.http.get(`${this.base}/posts/thread/${threadId}`, { headers: this.headers() });
+        return firstValueFrom(obs) as Promise<any>;
+    }
+
+    async joinThread(threadId: number) {
+        const obs = this.http.post(`${this.base}/threads/${threadId}/join`, {}, { headers: this.headers() });
+        return firstValueFrom(obs) as Promise<any>;
+    }
+
+    async leaveThread(threadId: number) {
+        const obs = this.http.post(`${this.base}/threads/${threadId}/leave`, {}, { headers: this.headers() });
+        return firstValueFrom(obs) as Promise<any>;
+    }
+
+    async promoteMember(threadId: number, userId: number) {
+        const obs = this.http.post(`${this.base}/threads/${threadId}/promote/${userId}`, {}, { headers: this.headers() });
+        return firstValueFrom(obs) as Promise<any>;
+    }
+
+    async demoteMember(threadId: number, userId: number) {
+        const obs = this.http.post(`${this.base}/threads/${threadId}/demote/${userId}`, {}, { headers: this.headers() });
+        return firstValueFrom(obs) as Promise<any>;
+    }
 }

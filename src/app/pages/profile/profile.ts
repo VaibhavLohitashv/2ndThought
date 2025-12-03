@@ -11,49 +11,7 @@ import { HttpClient, HttpHeaders } from '@angular/common/http';
     selector: 'app-profile',
     standalone: true,
     imports: [CommonModule, FormsModule],
-    template: `
-        <div class="profile-root">
-            <h2>Profile</h2>
-            <div *ngIf="loading">Loading...</div>
-
-            <div *ngIf="!loading">
-                <div class="profile-meta">
-                    <img *ngIf="profile.avatar_url" [src]="profile.avatar_url" alt="avatar" />
-                    <div>
-                        <div><strong>Email:</strong> {{ profile.email || '-' }}</div>
-                        <div><strong>Firebase UID:</strong> {{ profile.firebase_uid || '-' }}</div>
-                        <div><strong>Joined:</strong> {{ profile.created_at | date:'medium' }}</div>
-                    </div>
-                </div>
-
-                <form class="profile-form" (ngSubmit)="save()">
-                    <label>
-                        Full name
-                        <input [(ngModel)]="profile.full_name" name="full_name" />
-                    </label>
-                    <label>
-                        Avatar URL
-                        <input [(ngModel)]="profile.avatar_url" name="avatar_url" />
-                    </label>
-                    <button type="submit">Save</button>
-                    <button type="button" (click)="signOut()">Sign Out</button>
-                </form>
-
-                <section class="profile-threads">
-                    <h3>Threads</h3>
-                    <div *ngIf="!profile.threads || profile.threads.length === 0">You haven't joined any threads yet.</div>
-                    <ul>
-                        <li *ngFor="let t of profile.threads">
-                            <strong>{{ t.thread_title }}</strong> — <em>{{ t.role }}</em>
-                            <div class="muted">Joined: {{ t.joined_at | date:'medium' }}</div>
-                        </li>
-                    </ul>
-                </section>
-
-                <div *ngIf="error" class="error">{{ error }}</div>
-            </div>
-        </div>
-  `,
+    templateUrl: './profile.html',
     styleUrls: ['./profile.css']
 })
 export class ProfileComponent {
@@ -81,24 +39,6 @@ export class ProfileComponent {
             if (p) this.profile = p as any;
         } catch (err: any) {
             this.error = err?.message || 'Failed to load profile';
-        } finally {
-            this.loading = false;
-        }
-    }
-
-    async save() {
-        this.loading = true;
-        this.error = null;
-        try {
-            const token = this.auth.getIdToken();
-            const headers = token ? new HttpHeaders({ Authorization: `Bearer ${token}` }) : undefined;
-            await firstValueFrom(this.http.put(`http://localhost:8000/users/me`, {
-                full_name: this.profile.full_name,
-                avatar_url: this.profile.avatar_url,
-            }, { headers }));
-            await this.load();
-        } catch (err: any) {
-            this.error = err?.message || 'Failed to save profile';
         } finally {
             this.loading = false;
         }

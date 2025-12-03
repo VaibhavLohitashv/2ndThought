@@ -1,0 +1,41 @@
+<div class="profile-root container">
+    <div class="profile-header">
+        <h2>Personal Information</h2>
+    </div>
+
+    <div *ngIf="loading" class="muted">Loading...</div>
+
+    <div *ngIf="!loading" class="profile-body">
+        <div class="profile-top">
+            <div class="avatar">
+                <img *ngIf="profile.avatar_url; else noAvatar" [src]="profile.avatar_url" alt="avatar" />
+                <ng-template #noAvatar>
+                    <div class="avatar-placeholder">{{ profile.full_name ? (profile.full_name.charAt(0) || 'U') : 'U' }}
+                    </div>
+                </ng-template>
+            </div>
+            <div class="profile-form card">
+                <div class="profile-info">
+                    <h1>{{ profile.full_name || '-' }}</h1>
+                    <div class="row">{{ profile.email || '-' }}</div>
+                    <div class="row">{{ profile.firebase_uid || '-' }}</div>
+                    <div class="row">{{ profile.created_at | date:'MMM d, y' }}</div>
+                </div>
+            </div>
+        </div>
+
+        <section class="profile-threads card">
+            <h3>Threads</h3>
+            <div *ngIf="!profile.threads || profile.threads.length === 0" class="muted">You haven't joined any threads
+                yet.</div>
+            <ul>
+                <li *ngFor="let t of profile.threads">
+                    <strong>{{ t.thread_title }}</strong> — <em>{{ t.role }}</em>
+                    <div class="muted">Joined: {{ t.joined_at | date:'medium' }}</div>
+                </li>
+            </ul>
+        </section>
+
+        <div *ngIf="error" class="error">{{ error }}</div>
+    </div>
+</div>
