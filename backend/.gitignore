@@ -1,0 +1,33 @@
+# Python virtual environment
+.venv
+
+# Environment variables
+.env
+
+# Python cache files
+**/__pycache__
+
+# Firebase Admin SDK JSON key
+discussion-forum-a7895-firebase-adminsdk-fbsvc-15ca88afde.json
+
+# Byte-compiled / optimized / DLL files
+*.py[cod]
+*.so
+*.egg
+*.egg-info/
+dist/
+build/
+*.pyd
+
+# Logs
+*.log
+*.txt
+
+# IDE settings
+.vscode/
+.idea/
+*.iml
+
+# OS generated files
+.DS_Store
+Thumbs.db
