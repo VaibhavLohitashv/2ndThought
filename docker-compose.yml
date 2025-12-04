@@ -12,12 +12,58 @@ services:
       - "5432:5432"
     volumes:
       - pgdata:/var/lib/postgresql/data
+    networks:
+      - forum_network
   redis:
     image: redis:7-alpine
     container_name: forum_redis
     ports:
       - "6379:6379"
     restart: unless-stopped
+    networks:
+      - forum_network
+
+  backend:
+    build:
+      context: ./backend
+      dockerfile: Dockerfile
+    container_name: forum_backend
+    ports:
+      - "8000:8000"
+    depends_on:
+      - db
+      - redis
+    networks:
+      - forum_network
+    env_file:
+      - ./backend/.env
+    environment:
+      DB_HOST: db
+      REDIS_URL: redis://redis:6379
+      GOOGLE_APPLICATION_CREDENTIALS: /secrets/firebase.json
+    volumes:
+      - ./backend/discussion-forum-a7895-firebase-adminsdk-fbsvc-15ca88afde.json:/secrets/firebase.json:ro
+
+  frontend:
+    build:
+      context: ./frontend
+      dockerfile: Dockerfile
+    container_name: forum_frontend
+    ports:
+      - "4200:4200"
+    depends_on:
+      - backend
+    networks:
+      - forum_network
+    environment:
+      API_URL: http://backend:8000
+      WS_URL: ws://backend:8000
+    command: [ "npm", "start", "--", "--host", "0.0.0.0", "--port", "4200" ]
 
 volumes:
   pgdata:
+
+
+networks:
+  forum_network:
+    driver: bridge
