@@ -32,7 +32,8 @@
             <h3>Posts</h3>
             <div *ngIf="posts.length===0">No posts yet</div>
             <div class="post-list">
-                <app-post-tree [posts]="posts" (updated)="load()"></app-post-tree>
+                <app-post-tree [posts]="posts" [threadMembers]="thread.members" [myUserId]="myUserId"
+                    (updated)="load()"></app-post-tree>
             </div>
         </section>
 

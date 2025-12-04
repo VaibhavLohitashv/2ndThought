@@ -68,4 +68,9 @@ export class ThreadsService {
         const obs = this.http.post(`${this.base}/posts/${postId}/reply`, { content }, { headers: this.headers() });
         return firstValueFrom(obs) as Promise<any>;
     }
+
+    async deletePost(postId: number) {
+        const obs = this.http.delete(`${this.base}/posts/${postId}`, { headers: this.headers() });
+        return firstValueFrom(obs) as Promise<any>;
+    }
 }

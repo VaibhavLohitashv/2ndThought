@@ -261,6 +261,46 @@ export class ThreadDetail implements OnDestroy {
                 this.toast.show('New reply (reloaded)', 'info', 3000);
             }
         }
+        else if (msg.type === 'post_deleted' && msg.post_id) {
+            // remove the post (and its subtree) from local posts
+            const removeId = msg.post_id;
+            const removeFromList = (list: any[]) => {
+                for (let i = list.length - 1; i >= 0; i--) {
+                    const p = list[i];
+                    if (p.id === removeId) {
+                        list.splice(i, 1);
+                        return true;
+                    }
+                    if (p.children && p.children.length) {
+                        if (removeFromList(p.children)) return true;
+                    }
+                }
+                return false;
+            };
+            const found = removeFromList(this.posts);
+            if (found) {
+                this.toast.show('A post was deleted', 'info', 3000);
+            } else {
+                // if not found, reload to be safe
+                this.load();
+                this.toast.show('A post was deleted (reloaded)', 'info', 3000);
+            }
+        } else if (msg.type === 'posts_deleted' && msg.post_ids && Array.isArray(msg.post_ids)) {
+            // remove multiple post ids
+            const ids = new Set(msg.post_ids);
+            const removeFromListMultiple = (list: any[]) => {
+                for (let i = list.length - 1; i >= 0; i--) {
+                    const p = list[i];
+                    if (ids.has(p.id)) {
+                        list.splice(i, 1);
+                        continue;
+                    }
+                    if (p.children && p.children.length) removeFromListMultiple(p.children);
+                }
+            };
+            removeFromListMultiple(this.posts);
+            this.toast.show('Posts were deleted', 'info', 3000);
+        }
     }
 
     // admin check: does my membership role equal 'admin' for this thread?

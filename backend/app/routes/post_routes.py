@@ -289,7 +289,31 @@ async def delete_post(
             )
 
     try:
-        await db.delete(post)
+        # collect all posts in the same thread to find descendants
+        res = await db.execute(select(Post).where(Post.thread_id == post.thread_id))
+        all_posts = res.scalars().all()
+
+        # build parent->children map
+        children_map = {}
+        for p in all_posts:
+            pid = getattr(p, "parent_id", None)
+            children_map.setdefault(pid, []).append(p.id)
+
+        # collect ids to delete via BFS/DFS starting from post_id
+        to_delete = []
+        stack = [post_id]
+        while stack:
+            cur = stack.pop()
+            to_delete.append(cur)
+            for child_id in children_map.get(cur, []):
+                stack.append(child_id)
+
+        # delete all posts by id
+        for pid in to_delete:
+            p = await db.get(Post, pid)
+            if p:
+                await db.delete(p)
+
         await db.commit()
     except Exception:
         await db.rollback()
@@ -298,9 +322,29 @@ async def delete_post(
             detail="Could not delete post",
         )
 
-    payload = {"type": "post_deleted", "thread_id": post.thread_id, "post_id": post_id}
-    await manager.broadcast_thread(post.thread_id, payload)
-    return {"status": "ok", "deleted_post_id": post_id}
+    # Broadcast deletion events for each deleted post id
+    try:
+        for pid in to_delete:
+            payload = {
+                "type": "post_deleted",
+                "thread_id": post.thread_id,
+                "post_id": pid,
+            }
+            await manager.broadcast_thread(post.thread_id, payload)
+        # also publish to redis so other processes can forward
+        try:
+            from app.utils.redis_notifications import publish_thread_event
+
+            await publish_thread_event(
+                post.thread_id, {"type": "posts_deleted", "post_ids": to_delete}
+            )
+        except Exception:
+            pass
+    except Exception:
+        # Log but don't raise — deletion already committed
+        pass
+
+    return {"status": "ok", "deleted_post_ids": to_delete}
 
 
 # -------------------------

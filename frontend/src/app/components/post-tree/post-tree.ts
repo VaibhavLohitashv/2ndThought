@@ -15,6 +15,8 @@ import { ToastService } from '../../services/toast/toast';
 })
 export class PostTree {
     @Input() posts: any[] = [];
+    @Input() threadMembers: any[] = [];
+    @Input() myUserId: number | null = null;
     @Output() updated = new EventEmitter<void>();
 
     // local reply state
@@ -23,6 +25,26 @@ export class PostTree {
     replying: Record<number, boolean> = {};
 
     constructor(private svc: ThreadsService, private auth: AuthService, private toast: ToastService) { }
+
+    canDelete(post: any): boolean {
+        // prefer authoritative DB user id passed from parent
+        if (this.myUserId) {
+            // owner
+            if (post.user && post.user.id && post.user.id === this.myUserId) return true;
+            // membership-based admin/moderator check
+            if (this.threadMembers && Array.isArray(this.threadMembers)) {
+                const me = this.threadMembers.find((m: any) => m.user_id === this.myUserId);
+                if (me && (me.role === 'admin' || me.role === 'moderator')) return true;
+            }
+            return false;
+        }
+
+        // fallback: attempt to infer from auth user (best-effort only)
+        const user = this.auth.user$.value;
+        if (!user) return false;
+        if (post.user && post.user.id && user.uid && post.user.id === (user['dbId'] || null)) return true;
+        return false;
+    }
 
     toggleReply(postId: number) {
         this.replyOpen[postId] = !this.replyOpen[postId];
@@ -49,6 +71,36 @@ export class PostTree {
             this.toast.show(err?.message || 'Could not post reply', 'error', 5000);
         } finally {
             this.replying[postId] = false;
+        }
+    }
+
+    // delete a post (admin or owner allowed)
+    async deletePost(postId: number) {
+        // optimistic removal from UI
+        const removeFromList = (list: any[]) => {
+            for (let i = list.length - 1; i >= 0; i--) {
+                const p = list[i];
+                if (p.id === postId) {
+                    list.splice(i, 1);
+                    return true;
+                }
+                if (p.children && p.children.length) {
+                    if (removeFromList(p.children)) return true;
+                }
+            }
+            return false;
+        };
+        const found = removeFromList(this.posts);
+        try {
+            await this.svc.deletePost(postId);
+            this.toast.show('Post deleted', 'success', 3000);
+        } catch (err: any) {
+            console.error('delete error', err);
+            this.toast.show(err?.message || 'Could not delete post', 'error', 5000);
+            if (!found) {
+                // if we didn't remove it, attempt reload
+                this.updated.emit();
+            }
         }
     }
 }

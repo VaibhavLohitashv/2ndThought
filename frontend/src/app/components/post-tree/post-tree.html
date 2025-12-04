@@ -4,6 +4,7 @@
         <div class="post-content">{{ p.content }}</div>
         <div class="post-actions">
             <button (click)="toggleReply(p.id)">Reply</button>
+            <button *ngIf="canDelete(p)" class="btn btn-danger" (click)="deletePost(p.id)">Delete</button>
         </div>
 
         <div class="reply-box" *ngIf="replyOpen[p.id]">
