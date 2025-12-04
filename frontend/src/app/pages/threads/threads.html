@@ -12,7 +12,7 @@
         <div class="card" *ngFor="let t of threads" (click)="openThread(t.id)">
             <div class="card-title">{{ t.title }}</div>
             <div class="card-desc muted">{{ t.description || 'No description' }}</div>
-            <div class="card-meta">Created by: {{ t.created_by_name || 'Unknown' }}</div>
+            <div class="card-meta">{{ t.created_by_name || 'Unknown' }}</div>
         </div>
     </div>
 

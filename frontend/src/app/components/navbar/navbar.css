@@ -116,3 +116,32 @@
     justify-content: center;
     font-weight: 600;
 }
+
+@media (max-width: 900px) {
+    .nav-center {
+        display: none;
+    }
+
+    .notif-dropdown {
+        width: 260px;
+    }
+
+    .nav-left .logo {
+        font-size: 14px;
+    }
+}
+
+@media (max-width: 600px) {
+    .nav-right {
+        gap: 6px;
+    }
+
+    .btn {
+        padding: 6px 8px;
+    }
+
+    .avatar {
+        width: 28px;
+        height: 28px;
+    }
+}

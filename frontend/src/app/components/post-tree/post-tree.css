@@ -1,22 +1,30 @@
 .post {
-    border: 1px solid #e6e7ea;
-    padding: 10px;
-    margin-bottom: 8px
+    background: var(--surface);
+    border-radius: 8px;
+    padding: 12px;
+    margin-bottom: 12px;
+    box-shadow: var(--elevation-1);
+    border: 1px solid rgba(11, 13, 25, 0.04);
 }
 
 .post-children {
-    margin-top: 8px;
-    margin-left: 12px
+    margin-top: 10px;
+    margin-left: 14px;
+    border-left: 1px solid rgba(11, 13, 25, 0.03);
+    padding-left: 12px;
 }
 
 .post-actions {
-    margin-top: 8px
+    margin-top: 10px;
+    display: flex;
+    gap: 8px;
+    align-items: center;
 }
 
 .reply-box {
-    margin-top: 8px;
-    border-top: 1px dashed #e6e7ea;
-    padding-top: 8px
+    margin-top: 10px;
+    border-top: 1px dashed rgba(11, 13, 25, 0.04);
+    padding-top: 10px;
 }
 
 .reply-box textarea {
@@ -27,29 +35,32 @@
 
 .post-user {
     font-weight: 700;
-    font-size: 13px
+    font-size: 13px;
+    color: var(--primary);
 }
 
 .post-content {
-    margin-top: 6px
+    margin-top: 8px;
+    color: var(--text);
 }
 
 .actions {
     display: flex;
     gap: 8px;
     justify-content: flex-end;
-    margin-top: 8px
+    margin-top: 8px;
 }
 
 .btn {
     padding: 8px 12px;
     border: none;
-    cursor: pointer
+    cursor: pointer;
+    border-radius: 6px;
 }
 
 .btn-primary {
-    background: #2563eb;
-    color: #fff
+    background: var(--accent);
+    color: #fff;
 }
 
 .error {
@@ -59,9 +70,9 @@
 
 .highlight {
     animation: toast-highlight 1s ease-in-out;
-    box-shadow: 0 6px 20px rgba(0, 123, 255, 0.12);
-    border-left: 4px solid rgba(0, 123, 255, 0.9);
-    background: linear-gradient(90deg, rgba(0, 123, 255, 0.03), transparent);
+    box-shadow: 0 10px 30px rgba(11, 13, 25, 0.08);
+    border-left: 4px solid rgba(11, 84, 255, 0.95);
+    background: linear-gradient(90deg, rgba(11, 84, 255, 0.04), transparent);
 }
 
 @keyframes toast-highlight {
@@ -77,5 +88,30 @@
     100% {
         transform: translateY(0);
         opacity: 1;
+    }
+}
+
+@media (max-width: 900px) {
+    .post {
+        padding: 10px;
+    }
+
+    .post-children {
+        margin-left: 10px;
+        padding-left: 10px;
+    }
+}
+
+@media (max-width: 600px) {
+    .post {
+        padding: 8px;
+    }
+
+    .post-user {
+        font-size: 12px;
+    }
+
+    .post-content {
+        font-size: 14px;
     }
 }

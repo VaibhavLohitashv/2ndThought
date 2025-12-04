@@ -29,10 +29,12 @@
 }
 
 .avatar img {
-    height: 100%;
-    width: max-content;
+    width: 128px;
+    height: 128px;
     object-fit: cover;
     display: block;
+    border-radius: 8px;
+    box-shadow: var(--elevation-1);
 }
 
 .avatar-placeholder {
@@ -87,4 +89,33 @@
 
 .profile-threads li {
     margin-bottom: 0.75rem
+}
+
+@media (max-width: 900px) {
+    .profile-top {
+        grid-template-columns: 1fr;
+        gap: 1rem;
+    }
+
+    .avatar-placeholder,
+    .avatar img {
+        width: 112px;
+        height: 112px;
+    }
+}
+
+@media (max-width: 600px) {
+    .profile-root {
+        padding: 0.5rem;
+    }
+
+    .avatar-placeholder,
+    .avatar img {
+        width: 96px;
+        height: 96px;
+    }
+
+    .profile-top {
+        grid-template-columns: 1fr;
+    }
 }

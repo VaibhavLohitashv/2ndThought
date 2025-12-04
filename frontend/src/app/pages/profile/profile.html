@@ -8,7 +8,8 @@
     <div *ngIf="!loading" class="profile-body">
         <div class="profile-top">
             <div class="avatar">
-                <img *ngIf="profile.avatar_url; else noAvatar" [src]="profile.avatar_url" alt="avatar" />
+                <img *ngIf="avatarSrc; else noAvatar" [src]="avatarSrc" alt="avatar" loading="lazy" decoding="async"
+                    width="128" height="128" (error)="onAvatarError()" />
                 <ng-template #noAvatar>
                     <div class="avatar-placeholder">{{ profile.full_name ? (profile.full_name.charAt(0) || 'U') : 'U' }}
                     </div>

@@ -27,6 +27,7 @@ export class ProfileComponent {
         created_at: null,
         threads: [],
     };
+    avatarSrc: string | null = null;
 
     constructor(private profileSvc: ProfileService, private auth: AuthService, private router: Router, private http: HttpClient, private toast: ToastService) {
         this.load();
@@ -37,6 +38,10 @@ export class ProfileComponent {
         try {
             const p = await this.profileSvc.getProfile();
             if (p) this.profile = p as any;
+            // set avatarSrc only once (avoid repeated reassignments)
+            if (!this.avatarSrc && this.profile?.avatar_url) {
+                this.avatarSrc = this.profile.avatar_url;
+            }
         } catch (err: any) {
             const msg = err?.message || 'Failed to load profile';
             this.toast.show(msg, 'error', 5000);
@@ -48,5 +53,10 @@ export class ProfileComponent {
     async signOut() {
         await this.auth.signOut();
         this.router.navigate(['/login']);
+    }
+
+    onAvatarError() {
+        // avoid retry loops by clearing avatarSrc so template shows initials
+        this.avatarSrc = null;
     }
 }
