@@ -15,7 +15,7 @@ class UserRead(BaseModel):
     created_at: Optional[str] = None
 
     class Config:
-        orm_mode = True
+        model_config = {"from_attributes": True}
 
 
 class UserThreadInfo(BaseModel):
@@ -38,7 +38,7 @@ class PostRead(BaseModel):
     children: List["PostRead"] = []
 
     class Config:
-        orm_mode = True
+        model_config = {"from_attributes": True}
 
 
 class ThreadMember(BaseModel):
@@ -57,7 +57,7 @@ class ThreadRead(BaseModel):
     members: List[ThreadMember] = []
 
     class Config:
-        orm_mode = True
+        model_config = {"from_attributes": True}
 
 
 class PostsResponse(BaseModel):

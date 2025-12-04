@@ -14,9 +14,12 @@ class Settings(BaseSettings):
 
     GOOGLE_APPLICATION_CREDENTIALS: str
     FIREBASE_PROJECT_ID: str
+    # optional Redis URL (may be absent in single-process setups)
+    REDIS_URL: str | None = None
 
     class Config:
         env_file = ".env"
+        case_sensitive = False
 
 
 settings = Settings()

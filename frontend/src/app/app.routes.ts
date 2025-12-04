@@ -10,11 +10,6 @@ import { environment } from '../environments/environment';
 export const routes: Routes = [
     { path: 'login', component: LoginComponent },
     {
-        path: 'protected',
-        canActivate: [AuthGuard],
-        loadComponent: () => import('./pages/protected/protected').then(m => m.ProtectedComponent)
-    },
-    {
         path: 'threads',
         canActivate: [AuthGuard],
         loadComponent: () => import('./pages/threads/threads').then(m => m.ThreadsComponent)
@@ -30,6 +25,11 @@ export const routes: Routes = [
         loadComponent: () => import('./pages/profile/profile').then(m => m.ProfileComponent)
     },
     { path: '', redirectTo: 'threads', pathMatch: 'full' },
+    {
+        path: '**',
+        redirectTo: 'threads',
+        pathMatch: 'full'
+    },
 ];
 
 export const routerProviders = [
