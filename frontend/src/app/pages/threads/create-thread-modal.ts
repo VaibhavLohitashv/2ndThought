@@ -2,6 +2,7 @@ import { Component, EventEmitter, Output } from '@angular/core';
 import { CommonModule } from '@angular/common';
 import { FormsModule } from '@angular/forms';
 import { ThreadsService } from '../../services/threads/threads';
+import { ToastService } from '../../services/toast/toast';
 
 @Component({
     selector: 'app-create-thread-modal',
@@ -14,21 +15,22 @@ export class CreateThreadModal {
     title = '';
     description = '';
     loading = false;
-    error: string | null = null;
+
 
     @Output() created = new EventEmitter<void>();
     @Output() closed = new EventEmitter<void>();
 
-    constructor(private svc: ThreadsService) { }
+    constructor(private svc: ThreadsService, private toast: ToastService) { }
 
     async submit() {
         this.loading = true;
-        this.error = null;
+
         try {
             await this.svc.createThread({ title: this.title, description: this.description });
             this.created.emit();
         } catch (err: any) {
-            this.error = err?.message || 'Could not create thread';
+            const msg = err?.message || 'Could not create thread';
+            this.toast.show(msg, 'error', 5000);
         } finally {
             this.loading = false;
         }

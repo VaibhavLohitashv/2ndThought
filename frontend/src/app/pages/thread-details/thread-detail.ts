@@ -6,6 +6,7 @@ import { ThreadsService } from '../../services/threads/threads';
 import { HttpClient, HttpHeaders } from '@angular/common/http';
 import { firstValueFrom } from 'rxjs';
 import { AuthService } from '../../services/auth/auth';
+import { ToastService } from '../../services/toast/toast';
 import { PostTree } from '../../components/post-tree/post-tree';
 import { OnDestroy } from '@angular/core';
 
@@ -23,13 +24,11 @@ export class ThreadDetail implements OnDestroy {
     activeTab: 'posts' | 'create' | 'members' | 'admin' = 'posts';
     newPostContent = '';
     creatingPost = false;
-    postError: string | null = null;
 
     // store DB user id for exact membership checks
     myUserId: number | null = null;
 
-    // inline status messages for join/leave
-    metaMessage: { type: 'success' | 'error'; text: string } | null = null;
+    // inline status messages removed; using ToastService
 
     // leave confirmation modal state
     showLeaveConfirm = false;
@@ -44,7 +43,8 @@ export class ThreadDetail implements OnDestroy {
         private router: Router,
         private svc: ThreadsService,
         private http: HttpClient,
-        private auth: AuthService
+        private auth: AuthService,
+        private toast: ToastService
     ) {
         this.auth.user$.subscribe((u) => {
             // trigger UI update when auth changes
@@ -111,11 +111,10 @@ export class ThreadDetail implements OnDestroy {
     }
 
     async createPost() {
-        this.postError = null;
         this.creatingPost = true;
         const id = Number(this.route.snapshot.paramMap.get('id'));
         if (!id) {
-            this.postError = 'Invalid thread id';
+            this.toast.show('Invalid thread id', 'error', 4000);
             this.creatingPost = false;
             return;
         }
@@ -130,7 +129,8 @@ export class ThreadDetail implements OnDestroy {
             this.activeTab = 'posts';
         } catch (err: any) {
             console.error(err);
-            this.postError = err?.error?.detail ?? err?.error ?? err?.message ?? 'Could not create post';
+            const msg = err?.error?.detail ?? err?.error ?? err?.message ?? 'Could not create post';
+            this.toast.show(msg ?? 'An unknown error occurred', 'error', 5000);
         } finally {
             this.creatingPost = false;
         }
@@ -160,13 +160,10 @@ export class ThreadDetail implements OnDestroy {
             // reload thread and posts
             await this.load();
             this.activeTab = 'posts';
-            this.metaMessage = { type: 'success', text: 'You have joined the thread' };
-            // clear message after a short delay
-            setTimeout(() => (this.metaMessage = null), 4000);
+            this.toast.show('You have joined the thread', 'success', 4000);
         } catch (err: any) {
             console.error('join error', err);
-            this.metaMessage = { type: 'error', text: err?.error?.detail ?? err?.error ?? err?.message ?? 'Could not join thread' };
-            setTimeout(() => (this.metaMessage = null), 5000);
+            this.toast.show(err?.error?.detail ?? err?.error ?? err?.message ?? 'Could not join thread', 'error', 5000);
         }
     }
 
@@ -234,7 +231,11 @@ export class ThreadDetail implements OnDestroy {
         if (!msg || !msg.type) return;
         if (msg.type === 'post_created' && msg.post) {
             // prepend new post
-            this.posts = [msg.post, ...this.posts];
+            const p = msg.post;
+            p._highlight = true;
+            this.posts = [p, ...this.posts];
+            this.toast.show('New post in thread', 'info', 3500);
+            setTimeout(() => (p._highlight = false), 3000);
         } else if (msg.type === 'reply_created' && msg.post) {
             // find parent and insert into children
             const parentId = msg.post.parent_id;
@@ -253,8 +254,11 @@ export class ThreadDetail implements OnDestroy {
             };
             // try to insert; if not found, reload
             const found = insertReply(this.posts);
-            if (!found) {
+            if (found) {
+                this.toast.show('New reply', 'info', 3000);
+            } else {
                 this.load();
+                this.toast.show('New reply (reloaded)', 'info', 3000);
             }
         }
     }
@@ -282,26 +286,22 @@ export class ThreadDetail implements OnDestroy {
         if (!id) return;
         // client-side guard: only admins can promote, and ignore if already moderator/admin
         if (!this.isAdmin()) {
-            this.metaMessage = { type: 'error', text: 'Only admins can promote' };
-            setTimeout(() => (this.metaMessage = null), 4000);
+            this.toast.show('Only admins can promote', 'error', 4000);
             return;
         }
         const target = this.thread?.members?.find((m: any) => m.user_id === userId);
         if (!target || target.role === 'admin') {
-            this.metaMessage = { type: 'error', text: 'Cannot promote this member' };
-            setTimeout(() => (this.metaMessage = null), 4000);
+            this.toast.show('Cannot promote this member', 'error', 4000);
             return;
         }
         try {
             const res = await this.svc.promoteMember(id, userId);
             await this.load();
             const newRole = res?.role ?? 'updated';
-            this.metaMessage = { type: 'success', text: `Member role updated to ${newRole}` };
-            setTimeout(() => (this.metaMessage = null), 4000);
+            this.toast.show(`Member role updated to ${newRole}`, 'success', 4000);
         } catch (err: any) {
             console.error('promote error', err);
-            this.metaMessage = { type: 'error', text: err?.error?.detail ?? err?.error ?? err?.message ?? 'Could not promote member' };
-            setTimeout(() => (this.metaMessage = null), 5000);
+            this.toast.show(err?.error?.detail ?? err?.error ?? err?.message ?? 'Could not promote member', 'error', 5000);
         }
     }
 
@@ -314,8 +314,7 @@ export class ThreadDetail implements OnDestroy {
         if (target && target.role === 'admin') {
             const admins = (this.thread?.members || []).filter((m: any) => m.role === 'admin');
             if (admins.length <= 1) {
-                this.metaMessage = { type: 'error', text: 'Cannot demote the only admin' };
-                setTimeout(() => (this.metaMessage = null), 5000);
+                this.toast.show('Cannot demote the only admin', 'error', 5000);
                 return;
             }
         }
@@ -324,12 +323,10 @@ export class ThreadDetail implements OnDestroy {
             const res = await this.svc.demoteMember(id, userId);
             await this.load();
             const newRole = res?.role ?? 'updated';
-            this.metaMessage = { type: 'success', text: `Member role updated to ${newRole}` };
-            setTimeout(() => (this.metaMessage = null), 4000);
+            this.toast.show(`Member role updated to ${newRole}`, 'success', 4000);
         } catch (err: any) {
             console.error('demote error', err);
-            this.metaMessage = { type: 'error', text: err?.error?.detail ?? err?.error ?? err?.message ?? 'Could not demote member' };
-            setTimeout(() => (this.metaMessage = null), 5000);
+            this.toast.show(err?.error?.detail ?? err?.error ?? err?.message ?? 'Could not demote member', 'error', 5000);
         }
     }
 
@@ -342,6 +339,14 @@ export class ThreadDetail implements OnDestroy {
         this.showLeaveConfirm = true;
     }
 
+    selectTab(tab: 'posts' | 'create' | 'members' | 'admin') {
+        if (tab === 'admin' && !this.isAdmin()) {
+            this.toast.show('Only thread admins can view this panel.', 'error', 4000);
+            return;
+        }
+        this.activeTab = tab;
+    }
+
     // user confirmed leaving
     async leaveConfirmed() {
         this.showLeaveConfirm = false;
@@ -352,12 +357,10 @@ export class ThreadDetail implements OnDestroy {
             // reload thread and posts
             await this.load();
             this.activeTab = 'posts';
-            this.metaMessage = { type: 'success', text: 'You have left the thread' };
-            setTimeout(() => (this.metaMessage = null), 4000);
+            this.toast.show('You have left the thread', 'success', 4000);
         } catch (err: any) {
             console.error('leave error', err);
-            this.metaMessage = { type: 'error', text: err?.error?.detail ?? err?.error ?? err?.message ?? 'Could not leave thread' };
-            setTimeout(() => (this.metaMessage = null), 5000);
+            this.toast.show(err?.error?.detail ?? err?.error ?? err?.message ?? 'Could not leave thread', 'error', 5000);
         }
     }
 

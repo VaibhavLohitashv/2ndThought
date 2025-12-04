@@ -6,6 +6,7 @@ import { firstValueFrom } from 'rxjs';
 import { AuthService } from '../../services/auth/auth';
 import { ProfileService } from '../../services/profile/profile';
 import { HttpClient, HttpHeaders } from '@angular/common/http';
+import { ToastService } from '../../services/toast/toast';
 
 @Component({
     selector: 'app-profile',
@@ -16,7 +17,7 @@ import { HttpClient, HttpHeaders } from '@angular/common/http';
 })
 export class ProfileComponent {
     loading = true;
-    error: string | null = null;
+
     profile: any = {
         id: null,
         email: null,
@@ -27,18 +28,18 @@ export class ProfileComponent {
         threads: [],
     };
 
-    constructor(private profileSvc: ProfileService, private auth: AuthService, private router: Router, private http: HttpClient) {
+    constructor(private profileSvc: ProfileService, private auth: AuthService, private router: Router, private http: HttpClient, private toast: ToastService) {
         this.load();
     }
 
     async load() {
         this.loading = true;
-        this.error = null;
         try {
             const p = await this.profileSvc.getProfile();
             if (p) this.profile = p as any;
         } catch (err: any) {
-            this.error = err?.message || 'Failed to load profile';
+            const msg = err?.message || 'Failed to load profile';
+            this.toast.show(msg, 'error', 5000);
         } finally {
             this.loading = false;
         }

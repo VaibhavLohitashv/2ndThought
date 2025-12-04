@@ -4,6 +4,7 @@ import { Router, RouterLink, RouterLinkActive } from '@angular/router';
 import { FormsModule } from '@angular/forms';
 import { AuthService } from '../../services/auth/auth';
 import { ThreadsService } from '../../services/threads/threads';
+import { ToastService } from '../../services/toast/toast';
 
 interface NotificationItem {
     type: string;
@@ -25,7 +26,7 @@ export class NavbarComponent implements OnDestroy {
     unreadCount = 0;
     notifOpen = false;
 
-    constructor(public auth: AuthService, public router: Router, private svc: ThreadsService) {
+    constructor(public auth: AuthService, public router: Router, private svc: ThreadsService, private toast: ToastService) {
         this.auth.user$.subscribe((u) => {
             if (u) {
                 this.connectNotifications();
@@ -81,11 +82,12 @@ export class NavbarComponent implements OnDestroy {
                 this.unreadCount += 1;
             } catch (e) {
                 console.error('invalid notif', e);
+                this.toast.show('Received invalid notification payload', 'warning');
             }
         };
         this.ws.onopen = () => console.log('notif ws open');
         this.ws.onclose = () => { this.ws = null; };
-        this.ws.onerror = (e) => { console.error('notif ws error', e); try { this.ws?.close(); } catch { } };
+        this.ws.onerror = (e) => { console.error('notif ws error', e); this.toast.show('Notification connection error', 'error'); try { this.ws?.close(); } catch { } };
     }
 
     private disconnectNotifications() {

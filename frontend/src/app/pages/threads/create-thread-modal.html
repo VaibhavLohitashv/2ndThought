@@ -18,6 +18,6 @@
             <button class="btn btn-primary" (click)="submit()" [disabled]="loading || !title">Create</button>
         </div>
 
-        <div *ngIf="error" class="error">{{ error }}</div>
+        <!-- errors are displayed via toasts -->
     </div>
 </div>

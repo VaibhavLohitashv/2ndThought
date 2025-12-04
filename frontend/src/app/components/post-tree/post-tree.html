@@ -1,5 +1,5 @@
 <ng-template #renderPost let-p>
-    <div class="post">
+    <div class="post" [ngClass]="{ highlight: p._highlight }">
         <div class="post-user">{{ p.user.full_name || p.user.email }}</div>
         <div class="post-content">{{ p.content }}</div>
         <div class="post-actions">
@@ -13,7 +13,7 @@
                 <button class="btn btn-primary" (click)="replyTo(p.id)"
                     [disabled]="replying[p.id] || !(replyContent[p.id] && replyContent[p.id].trim())">Reply</button>
             </div>
-            <div *ngIf="replyError[p.id]" class="error">{{ replyError[p.id] }}</div>
+            <!-- reply errors displayed via toasts -->
         </div>
 
         <div class="post-children" *ngIf="p.children && p.children.length>0">

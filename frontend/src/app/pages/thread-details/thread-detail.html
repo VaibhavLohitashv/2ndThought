@@ -15,9 +15,7 @@
                 <button class="btn" (click)="confirmLeave()">Leave</button>
             </div>
 
-            <div *ngIf="metaMessage" class="meta-message" [ngClass]="metaMessage.type">
-                {{ metaMessage.text }}
-            </div>
+            <!-- meta messages moved to toast notifications -->
         </div>
 
         <nav class="tabs">
@@ -26,7 +24,7 @@
                 post</button>
             <button *ngIf="isMember()" [class.active]="activeTab==='members'"
                 (click)="activeTab='members'">Members</button>
-            <button *ngIf="isAdmin()" [class.active]="activeTab==='admin'" (click)="activeTab='admin'">Admin
+            <button *ngIf="isAdmin()" [class.active]="activeTab==='admin'" (click)="selectTab('admin')">Admin
                 Panel</button>
         </nav>
 
@@ -58,7 +56,7 @@
                 <button class="btn btn-primary" (click)="createPost()"
                     [disabled]="creatingPost || !newPostContent">Post</button>
             </div>
-            <div *ngIf="postError" class="error">{{ postError }}</div>
+            <!-- post errors moved to toast notifications -->
         </section>
 
         <section *ngIf="activeTab==='members'" class="members">
@@ -71,7 +69,6 @@
 
         <section *ngIf="activeTab==='admin'" class="admin-panel">
             <h3>Admin Panel</h3>
-            <div *ngIf="!isAdmin()" class="error">Only thread admins can view this panel.</div>
             <table *ngIf="isAdmin()" class="members-table">
                 <thead>
                     <tr>
