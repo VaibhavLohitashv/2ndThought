@@ -8,6 +8,15 @@
     gap: 0.6rem;
 }
 
+/* toast animations */
+.toast-enter {
+    animation: toast-in 280ms cubic-bezier(.2, .9, .2, 1) both;
+}
+
+.toast-exit {
+    animation: toast-out 220ms cubic-bezier(.2, .9, .2, 1) both;
+}
+
 .toast {
     min-width: 220px;
     max-width: 420px;
@@ -51,6 +60,35 @@
     line-height: 1;
     cursor: pointer;
     padding: 0 0.2rem;
+}
+
+.toast:hover {
+    transform: translateY(-4px);
+    box-shadow: var(--elevation-3);
+}
+
+@keyframes toast-in {
+    from {
+        transform: translateY(-8px) scale(.98);
+        opacity: 0
+    }
+
+    to {
+        transform: translateY(0) scale(1);
+        opacity: 1
+    }
+}
+
+@keyframes toast-out {
+    from {
+        transform: translateY(0) scale(1);
+        opacity: 1
+    }
+
+    to {
+        transform: translateY(-6px) scale(.98);
+        opacity: 0
+    }
 }
 
 @media (max-width: 900px) {

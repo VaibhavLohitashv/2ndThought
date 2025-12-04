@@ -1,4 +1,5 @@
 @import url('https://fonts.googleapis.com/css2?family=Poppins:wght@300;400;600;700;800&display=swap');
+
 /* Minimalist flat global styles */
 :root {
     --bg: #0f172a10;
@@ -110,6 +111,47 @@ a:hover {
     border-radius: var(--radius);
     box-shadow: var(--elevation-1);
     padding: 1rem;
+}
+
+/* Micro-interactions: subtle transitions and focus states */
+:root {
+    --interaction-duration: 180ms;
+    --interaction-ease: cubic-bezier(.2, .9, .2, 1);
+}
+
+* {
+    transition: background var(--interaction-duration) var(--interaction-ease),
+        color var(--interaction-duration) var(--interaction-ease),
+        transform var(--interaction-duration) var(--interaction-ease),
+        box-shadow var(--interaction-duration) var(--interaction-ease);
+}
+
+.card:hover {
+    transform: translateY(-4px);
+    box-shadow: var(--elevation-2);
+}
+
+.btn:hover {
+    transform: translateY(-2px) scale(1.01);
+    box-shadow: var(--elevation-2);
+}
+
+/* Focus ring for keyboard users */
+:focus {
+    outline: none;
+}
+
+/* Custom focus-visible ring */
+:focus-visible {
+    box-shadow: 0 0 0 3px rgba(11, 132, 255, 0.12), 0 6px 18px rgba(11, 13, 25, 0.06);
+}
+
+/* Respect reduced motion */
+@media (prefers-reduced-motion: reduce) {
+    * {
+        transition: none !important;
+        animation: none !important;
+    }
 }
 
 /* Responsive breakpoints */

@@ -23,6 +23,11 @@
 
 .reply-box {
     margin-top: 10px;
+
+    .icon-action:hover {
+        background: rgba(11, 13, 25, 0.02);
+    }
+
     border-top: 1px dashed rgba(11, 13, 25, 0.04);
     padding-top: 10px;
 }
@@ -56,6 +61,37 @@
     border: none;
     cursor: pointer;
     border-radius: 6px;
+}
+
+.icon-action {
+    display: inline-flex;
+    align-items: center;
+    gap: 6px;
+    padding: 6px 8px;
+    background: transparent;
+    border: none;
+    color: var(--muted, #6b7280);
+    cursor: pointer;
+    border-radius: 6px;
+    font-size: 13px;
+}
+
+.icon-action .icon {
+    font-size: 14px;
+    line-height: 1;
+}
+
+.icon-action small {
+    font-size: 11px;
+    opacity: 0.9;
+}
+
+.icon-action:hover {
+    background: rgba(11, 13, 25, 0.02);
+}
+
+.icon-danger {
+    color: var(--danger, #b91c1c);
 }
 
 .btn-primary {
