@@ -61,8 +61,7 @@ async def ws_thread(websocket: WebSocket, thread_id: int):
         await websocket.close(code=status.WS_1008_POLICY_VIOLATION)
         return
 
-    async for _ in (get_db(),):  # ensure db context available
-        pass
+    # ensure DB context will be created via SessionLocal below
     async with SessionLocal() as session:
         try:
             user = await _get_user_from_token(token, session)

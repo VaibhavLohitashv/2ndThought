@@ -7,6 +7,7 @@ import { HttpClient, HttpHeaders } from '@angular/common/http';
 import { firstValueFrom } from 'rxjs';
 import { AuthService } from '../../services/auth/auth';
 import { PostTree } from '../../components/post-tree/post-tree';
+import { OnDestroy } from '@angular/core';
 
 @Component({
     selector: 'app-thread-detail',
@@ -15,7 +16,7 @@ import { PostTree } from '../../components/post-tree/post-tree';
     templateUrl: './thread-detail.html',
     styleUrls: ['./thread-detail.css'],
 })
-export class ThreadDetail {
+export class ThreadDetail implements OnDestroy {
     loading = true;
     thread: any = null;
     posts: any[] = [];
@@ -33,6 +34,10 @@ export class ThreadDetail {
     // leave confirmation modal state
     showLeaveConfirm = false;
 
+    // websocket
+    private ws: WebSocket | null = null;
+    private reconnectTimer: any = null;
+
 
     constructor(
         private route: ActivatedRoute,
@@ -45,6 +50,10 @@ export class ThreadDetail {
             // trigger UI update when auth changes
         });
         this.load();
+    }
+
+    ngOnDestroy(): void {
+        this.disconnectWS();
     }
 
     // expose token for template use via a public getter
@@ -74,6 +83,8 @@ export class ThreadDetail {
                 this.activeTab = 'posts';
             }
         }
+        // (re)connect websocket for this thread
+        this.connectWS(id).catch((e) => console.error('ws connect error', e));
     }
 
     // Get authoritative DB user id from backend
@@ -156,6 +167,95 @@ export class ThreadDetail {
             console.error('join error', err);
             this.metaMessage = { type: 'error', text: err?.error?.detail ?? err?.error ?? err?.message ?? 'Could not join thread' };
             setTimeout(() => (this.metaMessage = null), 5000);
+        }
+    }
+
+    // WebSocket helpers
+    private async connectWS(threadId: number) {
+        this.disconnectWS();
+        const token = this.auth.getIdToken();
+        if (!token) return;
+        // use backend base URL from ThreadsService
+        const base = this.svc.apiBase.replace(/^http/, location.protocol === 'https:' ? 'wss' : 'ws');
+        const url = `${base.replace(/\/$/, '')}/ws/thread/${threadId}?token=${token}`;
+        try {
+            this.ws = new WebSocket(url);
+        } catch (e) {
+            console.error('ws ctor failed', e);
+            return;
+        }
+
+        this.ws.onopen = () => {
+            console.log('ws open for thread', threadId);
+            if (this.reconnectTimer) {
+                clearTimeout(this.reconnectTimer);
+                this.reconnectTimer = null;
+            }
+        };
+
+        this.ws.onmessage = (ev) => {
+            try {
+                const msg = JSON.parse(ev.data);
+                this.handleWSMessage(msg);
+            } catch (e) {
+                console.error('invalid ws message', e);
+            }
+        };
+
+        this.ws.onclose = () => {
+            console.log('ws closed, scheduling reconnect');
+            this.ws = null;
+            // attempt reconnect in a few seconds
+            this.reconnectTimer = setTimeout(() => this.connectWS(threadId), 3000);
+        };
+
+        this.ws.onerror = (e) => {
+            console.error('ws error', e);
+            try {
+                this.ws?.close();
+            } catch { }
+        };
+    }
+
+    private disconnectWS() {
+        if (this.reconnectTimer) {
+            clearTimeout(this.reconnectTimer);
+            this.reconnectTimer = null;
+        }
+        if (this.ws) {
+            try {
+                this.ws.close();
+            } catch { }
+            this.ws = null;
+        }
+    }
+
+    private handleWSMessage(msg: any) {
+        if (!msg || !msg.type) return;
+        if (msg.type === 'post_created' && msg.post) {
+            // prepend new post
+            this.posts = [msg.post, ...this.posts];
+        } else if (msg.type === 'reply_created' && msg.post) {
+            // find parent and insert into children
+            const parentId = msg.post.parent_id;
+            const insertReply = (list: any[]) => {
+                for (const p of list) {
+                    if (p.id === parentId) {
+                        p.children = p.children || [];
+                        p.children.push(msg.post);
+                        return true;
+                    }
+                    if (p.children && p.children.length) {
+                        if (insertReply(p.children)) return true;
+                    }
+                }
+                return false;
+            };
+            // try to insert; if not found, reload
+            const found = insertReply(this.posts);
+            if (!found) {
+                this.load();
+            }
         }
     }
 

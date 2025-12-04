@@ -12,7 +12,25 @@
 
     <div class="nav-right">
         <ng-container *ngIf="auth.user$ | async as user; else loggedOut">
-            <button class="btn link" (click)="goProfile()">Profile</button>
+            <div class="notifications">
+                <button class="btn notif-btn" (click)="toggleNotifications()">
+                    🔔<span *ngIf="unreadCount>0" class="badge">{{unreadCount}}</span>
+                </button>
+                <div class="notif-dropdown" *ngIf="notifOpen">
+                    <div *ngIf="notifications.length===0" class="muted">No notifications</div>
+                    <ul>
+                        <li *ngFor="let n of notifications">
+                            <div class="notif-message">{{ n.message }}</div>
+                            <button *ngIf="n.thread_id" class="btn link"
+                                (click)="notifOpen=false; router.navigate(['/threads', n.thread_id])">Open</button>
+                        </li>
+                    </ul>
+                </div>
+            </div>
+            <button class="btn link profile-btn" (click)="goProfile()">
+                <span class="avatar initials">{{ getInitials(user) }}</span>
+                Profile
+            </button>
             <button class="btn" (click)="logout()">Logout</button>
         </ng-container>
         <ng-template #loggedOut>

@@ -88,7 +88,42 @@ async def create_post(
         },
     }
 
+    # broadcast locally
     await manager.broadcast_thread(post.thread_id, payload)
+    # publish to redis so other processes can forward
+    try:
+        await publish_notification(
+            post.user_id, {"type": "post_created", "post": payload["post"]}
+        )
+    except Exception:
+        pass
+    try:
+        from app.utils.redis_notifications import publish_thread_event
+
+        await publish_thread_event(post.thread_id, payload)
+    except Exception:
+        pass
+    # notify all thread members (except author)
+    try:
+        members_res = await db.execute(
+            select(ThreadMembership).where(ThreadMembership.thread_id == post.thread_id)
+        )
+        members = members_res.scalars().all()
+        notif = {
+            "type": "thread_post",
+            "message": f"{current_user.full_name} posted in {getattr(thread, 'title', 'a thread')}",
+            "post": payload["post"],
+            "thread_id": post.thread_id,
+        }
+        for m in members:
+            try:
+                if getattr(m, "user_id", None) == current_user.id:
+                    continue
+                await publish_notification(m.user_id, notif)
+            except Exception:
+                continue
+    except Exception:
+        pass
     return {"status": "ok", "post": payload["post"]}
 
 
@@ -159,17 +194,61 @@ async def reply_to_post(
         },
     }
 
+    # broadcast locally
     await manager.broadcast_thread(reply.thread_id, payload)
+    # publish to redis for other processes
+    try:
+        await publish_notification(
+            reply.user_id, {"type": "reply_created", "post": payload["post"]}
+        )
+    except Exception:
+        pass
+    try:
+        from app.utils.redis_notifications import publish_thread_event
+
+        await publish_thread_event(reply.thread_id, payload)
+    except Exception:
+        pass
+
+    # notify all thread members (except author and parent owner) about the reply
+    try:
+        members_res = await db.execute(
+            select(ThreadMembership).where(
+                ThreadMembership.thread_id == reply.thread_id
+            )
+        )
+        members = members_res.scalars().all()
+        notif = {
+            "type": "thread_reply",
+            "message": f"{current_user.full_name} replied in {getattr(thread, 'title', 'a thread')}",
+            "post": payload["post"],
+            "thread_id": reply.thread_id,
+        }
+        for m in members:
+            try:
+                if getattr(m, "user_id", None) == current_user.id:
+                    continue
+                # skip parent-specific notify here to avoid duplicate
+                if getattr(parent, "user_id", None) and m.user_id == parent.user_id:
+                    continue
+                await publish_notification(m.user_id, notif)
+            except Exception:
+                continue
+    except Exception:
+        pass
 
     # notify parent owner (via Redis pub/sub) if different user
     if getattr(parent, "user_id", None) and parent.user_id != current_user.id:
-        notif = {
+        notif_parent = {
             "type": "reply_notification",
             "message": f"{current_user.full_name} replied to your post",
             "post": payload["post"],
             "thread_id": reply.thread_id,
         }
-        await publish_notification(parent.user_id, notif)
+        try:
+            await publish_notification(parent.user_id, notif_parent)
+        except Exception:
+            pass
 
     return {"status": "ok", "reply": payload["post"]}
 

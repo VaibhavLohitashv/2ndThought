@@ -1,6 +1,6 @@
 import { Component } from '@angular/core';
 import { CommonModule } from '@angular/common';
-import { Router } from '@angular/router';
+import { Router, ActivatedRoute } from '@angular/router';
 import { ThreadsService } from '../../services/threads/threads';
 import { CreateThreadModal } from './create-thread-modal';
 
@@ -16,14 +16,22 @@ export class ThreadsComponent {
     threads: any[] = [];
     showCreate = false;
 
-    constructor(private svc: ThreadsService, private router: Router) {
-        this.load();
+    constructor(private svc: ThreadsService, private router: Router, private route: ActivatedRoute) {
+        // react to query param changes (e.g. ?search=...)
+        this.route.queryParams.subscribe((qp) => {
+            const q = qp['search'];
+            this.load(q);
+        });
     }
 
-    async load() {
+    async load(searchQuery?: string) {
         this.loading = true;
         try {
-            this.threads = await this.svc.listThreads();
+            if (searchQuery && searchQuery.trim()) {
+                this.threads = await this.svc.searchThreads(searchQuery);
+            } else {
+                this.threads = await this.svc.listThreads();
+            }
         } catch (err) {
             console.error(err);
         } finally {

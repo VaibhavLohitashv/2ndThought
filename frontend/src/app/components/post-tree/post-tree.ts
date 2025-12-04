@@ -1,9 +1,9 @@
 import { Component, Input, Output, EventEmitter } from '@angular/core';
 import { CommonModule } from '@angular/common';
 import { FormsModule } from '@angular/forms';
-import { HttpClient, HttpHeaders } from '@angular/common/http';
 import { firstValueFrom } from 'rxjs';
 import { AuthService } from '../../services/auth/auth';
+import { ThreadsService } from '../../services/threads/threads';
 
 @Component({
     selector: 'app-post-tree',
@@ -22,7 +22,7 @@ export class PostTree {
     replying: Record<number, boolean> = {};
     replyError: Record<number, string | null> = {};
 
-    constructor(private http: HttpClient, private auth: AuthService) { }
+    constructor(private svc: ThreadsService, private auth: AuthService) { }
 
     toggleReply(postId: number) {
         this.replyOpen[postId] = !this.replyOpen[postId];
@@ -42,10 +42,7 @@ export class PostTree {
             return;
         }
         try {
-            const token = this.auth.getIdToken();
-            const headers = token ? new HttpHeaders({ Authorization: `Bearer ${token}` }) : undefined;
-            const obs = this.http.post(`http://localhost:8000/posts/${postId}/reply`, { content }, { headers });
-            await firstValueFrom(obs);
+            await this.svc.replyToPost(postId, content);
             this.replyContent[postId] = '';
             this.replyOpen[postId] = false;
             this.updated.emit();

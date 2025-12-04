@@ -1,5 +1,7 @@
 from typing import Any, List
 
+from sqlalchemy import or_
+
 from fastapi import APIRouter, Depends, HTTPException, status
 from sqlalchemy import and_
 from sqlalchemy.ext.asyncio import AsyncSession
@@ -17,6 +19,44 @@ router = APIRouter(tags=["Threads"])
 async def get_db() -> AsyncSession:
     async with SessionLocal() as session:
         yield session
+
+
+@router.get("/search", response_model=List[ThreadRead])
+async def search_threads(q: str, db: AsyncSession = Depends(get_db)):
+    # simple search across title and description (case-insensitive)
+    if not q or not q.strip():
+        return []
+    pattern = f"%{q}%"
+    res = await db.execute(
+        select(Thread).where(
+            or_(Thread.title.ilike(pattern), Thread.description.ilike(pattern))
+        )
+    )
+    threads = res.scalars().all()
+    out = []
+    for t in threads:
+        creator_name = None
+        try:
+            creator = await db.get(User, getattr(t, "created_by", None))
+            creator_name = getattr(creator, "full_name", None)
+        except Exception:
+            creator_name = None
+        created_by_val = getattr(t, "created_by", None)
+        try:
+            created_by_val = int(created_by_val) if created_by_val is not None else 0
+        except Exception:
+            created_by_val = 0
+        out.append(
+            {
+                "id": t.id,
+                "title": t.title,
+                "description": t.description,
+                "created_by": created_by_val,
+                "created_by_name": creator_name,
+                "members": [],
+            }
+        )
+    return out
 
 
 @router.post("/", response_model=dict)
@@ -120,12 +160,17 @@ async def list_threads(db: AsyncSession = Depends(get_db)):
             creator_name = getattr(creator, "full_name", None)
         except Exception:
             creator_name = None
+        created_by_val = getattr(t, "created_by", None)
+        try:
+            created_by_val = int(created_by_val) if created_by_val is not None else 0
+        except Exception:
+            created_by_val = 0
         out.append(
             {
                 "id": t.id,
                 "title": t.title,
                 "description": t.description,
-                "created_by": getattr(t, "created_by", None),
+                "created_by": created_by_val,
                 "created_by_name": creator_name,
                 "members": [],
             }

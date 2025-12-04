@@ -32,6 +32,52 @@
     align-items: center;
 }
 
+.notifications {
+    position: relative
+}
+
+.notif-btn {
+    position: relative
+}
+
+.badge {
+    position: absolute;
+    top: -6px;
+    right: -6px;
+    background: var(--danger);
+    color: white;
+    border-radius: 999px;
+    padding: 2px 6px;
+    font-size: 12px;
+}
+
+.notif-dropdown {
+    position: absolute;
+    right: 0;
+    margin-top: 8px;
+    background: var(--surface);
+    border: 1px solid #e6e7ea;
+    padding: 8px;
+    width: 320px;
+    box-shadow: 0 8px 24px rgba(15, 23, 42, 0.08);
+    z-index: 100;
+}
+
+.notif-dropdown ul {
+    margin: 0;
+    padding: 0;
+    list-style: none
+}
+
+.notif-dropdown li {
+    padding: 8px 0;
+    border-bottom: 1px solid #f1f3f5
+}
+
+.notif-message {
+    font-size: 14px
+}
+
 .btn.link {
     background: transparent;
     border: none;
@@ -46,4 +92,27 @@
     background: #fff;
     cursor: pointer;
     color: black;
+}
+
+.profile-btn {
+    display: inline-flex;
+    align-items: center;
+    gap: 8px;
+}
+
+.avatar {
+    width: 32px;
+    height: 32px;
+    border-radius: 50%;
+    object-fit: cover;
+    display: inline-block;
+}
+
+.avatar.initials {
+    background: #2f80ed;
+    color: white;
+    display: inline-flex;
+    align-items: center;
+    justify-content: center;
+    font-weight: 600;
 }
