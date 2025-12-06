@@ -1,18 +1,55 @@
+<!-- FILE: src/app/pages/threads/threads.html -->
 <div class="threads-page container">
-    <h2>Threads</h2>
-    <div *ngIf="loading">Loading...</div>
-    <div *ngIf="!loading && threads.length===0">No threads yet. Create one!</div>
-    <div class="grid" *ngIf="!loading">
-        <div class="card new" (click)="openCreate()">
-            <div class="card-title">
-                <div class="plus">+</div>
-            </div>
+
+    <!-- Loading -->
+    <div *ngIf="loading" class="threads-loading">
+        <div class="thread-skeleton skeleton"></div>
+        <div class="thread-skeleton skeleton"></div>
+        <div class="thread-skeleton skeleton"></div>
+    </div>
+
+    <!-- Empty state -->
+    <div *ngIf="!loading && threads.length === 0" class="threads-empty">
+        <div class="empty-icon">💭</div>
+        <h3>No threads yet</h3>
+        <p>Create your first thread and start the conversation!</p>
+        <button class="create-btn" (click)="openCreate()">
+            <span class="create-btn-icon">✨</span>
+            Create Thread
+        </button>
+    </div>
+
+    <!-- Threads grid -->
+    <div *ngIf="!loading && threads.length > 0" class="threads-grid">
+        <!-- New thread card -->
+        <div class="thread-card thread-card-new" (click)="openCreate()">
+            <div class="new-icon">+</div>
+            <span class="new-text">Create new thread</span>
         </div>
 
-        <div class="card" *ngFor="let t of threads" (click)="openThread(t.id)">
-            <div class="card-title">{{ t.title }}</div>
-            <div class="card-desc muted">{{ t.description || 'No description' }}</div>
-            <div class="card-meta">{{ t.created_by_name || 'Unknown' }}</div>
+        <!-- Thread cards -->
+        <div class="thread-card" *ngFor="let t of threads; let i = index" (click)="openThread(t.id)"
+            [style.animation-delay.ms]="i * 50">
+            <div class="thread-title">{{ t.title }}</div>
+            <div class="thread-desc">{{ t.description || 'No description provided' }}</div>
+            <div class="thread-meta">
+                <div class="thread-author">
+                    <div class="author-avatar">
+                        {{ (t.created_by_name || 'U').charAt(0).toUpperCase() }}
+                    </div>
+                    <span class="author-name">{{ t.created_by_name || 'Unknown' }}</span>
+                </div>
+                <div class="thread-stats">
+                    <div class="stat">
+                        <span class="stat-icon">💬</span>
+                        <span>{{ t.post_count || 0 }}</span>
+                    </div>
+                    <div class="stat">
+                        <span class="stat-icon">👥</span>
+                        <span>{{ t.member_count || 0 }}</span>
+                    </div>
+                </div>
+            </div>
         </div>
     </div>
 

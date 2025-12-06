@@ -1,6 +1,15 @@
+<!-- FILE: src/app/components/toast/toast.html -->
 <div class="toast-wrapper" *ngIf="toasts.length">
     <div *ngFor="let t of toasts" class="toast" [ngClass]="t.type">
-        <div class="toast-msg">{{ t.message }}</div>
+        <div class="toast-icon">
+            <span *ngIf="t.type === 'info'">ℹ️</span>
+            <span *ngIf="t.type === 'success'">✓</span>
+            <span *ngIf="t.type === 'warning'">⚠️</span>
+            <span *ngIf="t.type === 'error'">✕</span>
+        </div>
+        <div class="toast-content">
+            <div class="toast-msg">{{ t.message }}</div>
+        </div>
         <button class="toast-close" (click)="removeToast(t.id)">×</button>
     </div>
 </div>

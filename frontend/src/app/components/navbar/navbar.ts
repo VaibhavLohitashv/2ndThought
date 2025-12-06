@@ -1,3 +1,4 @@
+// FILE: src/app/components/navbar/navbar.ts
 import { Component, OnDestroy } from '@angular/core';
 import { CommonModule } from '@angular/common';
 import { Router, RouterLink, RouterLinkActive } from '@angular/router';
@@ -5,6 +6,7 @@ import { FormsModule } from '@angular/forms';
 import { AuthService } from '../../services/auth/auth';
 import { ThreadsService } from '../../services/threads/threads';
 import { ToastService } from '../../services/toast/toast';
+import { LogoGeometricComponent } from '../logo/logo';
 
 interface NotificationItem {
     type: string;
@@ -15,7 +17,7 @@ interface NotificationItem {
 @Component({
     selector: 'app-navbar',
     standalone: true,
-    imports: [CommonModule, FormsModule, RouterLink],
+    imports: [CommonModule, FormsModule, RouterLink, LogoGeometricComponent],
     templateUrl: './navbar.html',
     styleUrls: ['./navbar.css']
 })
@@ -26,7 +28,12 @@ export class NavbarComponent implements OnDestroy {
     unreadCount = 0;
     notifOpen = false;
 
-    constructor(public auth: AuthService, public router: Router, private svc: ThreadsService, private toast: ToastService) {
+    constructor(
+        public auth: AuthService,
+        public router: Router,
+        private svc: ThreadsService,
+        private toast: ToastService
+    ) {
         this.auth.user$.subscribe((u) => {
             if (u) {
                 this.connectNotifications();
@@ -43,9 +50,7 @@ export class NavbarComponent implements OnDestroy {
     }
 
     onSearch() {
-        // perform backend search and navigate to first result if any
         const q = (this.query || '').trim();
-        // navigate to threads page with search query param; ThreadsComponent will handle the rest
         this.router.navigate(['/threads'], { queryParams: { search: q } });
     }
 
@@ -87,7 +92,11 @@ export class NavbarComponent implements OnDestroy {
         };
         this.ws.onopen = () => console.log('notif ws open');
         this.ws.onclose = () => { this.ws = null; };
-        this.ws.onerror = (e) => { console.error('notif ws error', e); this.toast.show('Notification connection error', 'error'); try { this.ws?.close(); } catch { } };
+        this.ws.onerror = (e) => {
+            console.error('notif ws error', e);
+            this.toast.show('Notification connection error', 'error');
+            try { this.ws?.close(); } catch { }
+        };
     }
 
     private disconnectNotifications() {

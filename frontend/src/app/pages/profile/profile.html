@@ -1,42 +1,73 @@
-<div class="profile-root container">
+<!-- FILE: src/app/pages/profile/profile.html -->
+<div class="profile-page container">
     <div class="profile-header">
-        <h2>Personal Information</h2>
+        <h1>Your <span>Profile</span></h1>
     </div>
 
-    <div *ngIf="loading" class="muted">Loading...</div>
+    <!-- Loading -->
+    <div *ngIf="loading" class="loading-container">
+        <div class="loading-spinner"></div>
+        <p class="loading-text">Loading profile...</p>
+    </div>
 
-    <div *ngIf="!loading" class="profile-body">
-        <div class="profile-top">
-            <div class="avatar">
-                <img *ngIf="avatarSrc; else noAvatar" [src]="avatarSrc" alt="avatar" loading="lazy" decoding="async"
-                    width="128" height="128" (error)="onAvatarError()" />
-                <ng-template #noAvatar>
-                    <div class="avatar-placeholder">{{ profile.full_name ? (profile.full_name.charAt(0) || 'U') : 'U' }}
-                    </div>
-                </ng-template>
+    <div *ngIf="!loading">
+        <!-- Profile card -->
+        <div class="profile-card">
+            <div class="profile-avatar-section">
+                <div class="profile-avatar">
+                    <img *ngIf="avatarSrc; else noAvatar" [src]="avatarSrc" alt="avatar" (error)="onAvatarError()" />
+                    <ng-template #noAvatar>
+                        <span class="avatar-placeholder">
+                            {{ profile.full_name ? profile.full_name.charAt(0).toUpperCase() : 'U' }}
+                        </span>
+                    </ng-template>
+                </div>
             </div>
-            <div class="profile-form card">
-                <div class="profile-info">
-                    <h1>{{ profile.full_name || '-' }}</h1>
-                    <div class="row">{{ profile.email || '-' }}</div>
-                    <div class="row">{{ profile.firebase_uid || '-' }}</div>
-                    <div class="row">{{ profile.created_at | date:'MMM d, y' }}</div>
+
+            <div class="profile-info">
+                <h2 class="profile-name">{{ profile.full_name || 'User' }}</h2>
+                <p class="profile-email">{{ profile.email || '-' }}</p>
+
+                <div class="profile-meta">
+                    <div class="meta-item">
+                        <span class="meta-label">User ID</span>
+                        <span class="meta-value">{{ profile.firebase_uid || '-' }}</span>
+                    </div>
+                    <div class="meta-item">
+                        <span class="meta-label">Member Since</span>
+                        <span class="meta-value">{{ profile.created_at | date:'MMM d, y' }}</span>
+                    </div>
+                    <div class="meta-item">
+                        <span class="meta-label">Threads</span>
+                        <span class="meta-value">{{ profile.threads?.length || 0 }}</span>
+                    </div>
                 </div>
             </div>
         </div>
 
-        <section class="profile-threads card">
-            <h3>Threads</h3>
-            <div *ngIf="!profile.threads || profile.threads.length === 0" class="muted">You haven't joined any threads
-                yet.</div>
-            <ul>
-                <li *ngFor="let t of profile.threads">
-                    <strong>{{ t.thread_title }}</strong> — <em>{{ t.role }}</em>
-                    <div class="muted">Joined: {{ t.joined_at | date:'medium' }}</div>
+        <!-- Threads section -->
+        <section class="threads-section">
+            <div class="section-header">
+                <h3 class="section-title">Your Threads</h3>
+            </div>
+
+            <div *ngIf="!profile.threads || profile.threads.length === 0" class="threads-empty">
+                <div class="threads-empty-icon">💭</div>
+                <p>You haven't joined any threads yet.</p>
+            </div>
+
+            <ul *ngIf="profile.threads?.length > 0" class="threads-list">
+                <li *ngFor="let t of profile.threads" class="thread-item">
+                    <div class="thread-info">
+                        <div class="thread-icon">💬</div>
+                        <div class="thread-details">
+                            <h4>{{ t.thread_title }}</h4>
+                            <p>Joined {{ t.joined_at | date:'medium' }}</p>
+                        </div>
+                    </div>
+                    <span class="thread-role">{{ t.role }}</span>
                 </li>
             </ul>
         </section>
-
-        <!-- errors displayed via toast -->
     </div>
 </div>

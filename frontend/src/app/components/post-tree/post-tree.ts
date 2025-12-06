@@ -18,6 +18,7 @@ export class PostTree {
     @Input() threadMembers: any[] = [];
     @Input() myUserId: number | null = null;
     @Output() updated = new EventEmitter<void>();
+    @Output() typing = new EventEmitter<void>();
 
     // local reply state
     replyOpen: Record<number, boolean> = {};

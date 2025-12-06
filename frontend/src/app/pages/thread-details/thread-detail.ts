@@ -1,4 +1,4 @@
-import { Component } from '@angular/core';
+import { Component, ChangeDetectorRef } from '@angular/core';
 import { CommonModule } from '@angular/common';
 import { FormsModule } from '@angular/forms';
 import { ActivatedRoute, Router } from '@angular/router';
@@ -28,14 +28,15 @@ export class ThreadDetail implements OnDestroy {
     // store DB user id for exact membership checks
     myUserId: number | null = null;
 
-    // inline status messages removed; using ToastService
-
     // leave confirmation modal state
     showLeaveConfirm = false;
 
     // websocket
     private ws: WebSocket | null = null;
     private reconnectTimer: any = null;
+    // typing indicator state
+    typingUsers: Record<number, string> = {};
+    private typingTimeouts: Record<number, any> = {};
 
 
     constructor(
@@ -44,7 +45,8 @@ export class ThreadDetail implements OnDestroy {
         private svc: ThreadsService,
         private http: HttpClient,
         private auth: AuthService,
-        private toast: ToastService
+        private toast: ToastService,
+        private cdr: ChangeDetectorRef
     ) {
         this.auth.user$.subscribe((u) => {
             // trigger UI update when auth changes
@@ -59,6 +61,11 @@ export class ThreadDetail implements OnDestroy {
     // expose token for template use via a public getter
     public get idToken(): string | null {
         return this.auth.getIdToken();
+    }
+
+    // getter for typing users keys (for template)
+    public get typingUserKeys(): number[] {
+        return Object.keys(this.typingUsers).map(k => Number(k));
     }
 
     async load() {
@@ -134,6 +141,36 @@ export class ThreadDetail implements OnDestroy {
         } finally {
             this.creatingPost = false;
         }
+    }
+
+    // called by template on input in create textarea
+    onCreateInput() {
+        if (!this.ws) return;
+        try {
+            this.ws.send(JSON.stringify({ type: 'typing' }));
+        } catch (e) { }
+        // also schedule stop event after short idle
+        this.scheduleLocalTypingStop();
+    }
+
+    // called when typing in reply textareas (from post-tree component)
+    onReplyTyping() {
+        if (!this.ws) return;
+        try {
+            this.ws.send(JSON.stringify({ type: 'typing' }));
+        } catch (e) { }
+        // also schedule stop event after short idle
+        this.scheduleLocalTypingStop();
+    }
+
+    private scheduleLocalTypingStop() {
+        // send typing_stop after 3s of inactivity
+        if (this.typingTimeouts[-1]) {
+            clearTimeout(this.typingTimeouts[-1]);
+        }
+        this.typingTimeouts[-1] = setTimeout(() => {
+            try { this.ws?.send(JSON.stringify({ type: 'typing_stop' })); } catch (e) { }
+        }, 3000);
     }
 
     isMember(): boolean {
@@ -225,6 +262,10 @@ export class ThreadDetail implements OnDestroy {
             } catch { }
             this.ws = null;
         }
+        // clear all typing timeouts and indicators
+        Object.values(this.typingTimeouts).forEach(timeout => clearTimeout(timeout));
+        this.typingTimeouts = {};
+        this.typingUsers = {};
     }
 
     private handleWSMessage(msg: any) {
@@ -300,7 +341,45 @@ export class ThreadDetail implements OnDestroy {
             };
             removeFromListMultiple(this.posts);
             this.toast.show('Posts were deleted', 'info', 3000);
+        } else if (msg.type === 'typing' && msg.user) {
+            // add user to typing indicators (exclude self)
+            if (msg.user.id !== this.myUserId) {
+                this.typingUsers = { ...this.typingUsers, [msg.user.id]: msg.user.full_name || `User ${msg.user.id}` };
+                // clear any existing timeout for this user
+                if (this.typingTimeouts[msg.user.id]) {
+                    clearTimeout(this.typingTimeouts[msg.user.id]);
+                }
+                // auto-remove after 5s if no stop received
+                this.typingTimeouts[msg.user.id] = setTimeout(() => {
+                    const newTypingUsers = { ...this.typingUsers };
+                    delete newTypingUsers[msg.user.id];
+                    this.typingUsers = newTypingUsers;
+                    delete this.typingTimeouts[msg.user.id];
+                }, 5000);
+            }
+        } else if (msg.type === 'typing_stop' && msg.user) {
+            // remove user from typing indicators
+            const newTypingUsers = { ...this.typingUsers };
+            delete newTypingUsers[msg.user.id];
+            this.typingUsers = newTypingUsers;
+            if (this.typingTimeouts[msg.user.id]) {
+                clearTimeout(this.typingTimeouts[msg.user.id]);
+                delete this.typingTimeouts[msg.user.id];
+            }
+        } else if (msg.type === 'role_updated' && msg.user_id && msg.new_role) {
+            // Update the role of the user in the thread members list
+            const member = this.thread?.members?.find((m: any) => m.user_id === msg.user_id);
+            if (member) {
+                member.role = msg.new_role;
+                this.updateUIForRoleChange(member.user_id, msg.new_role);
+                this.toast.show(`User role updated to ${msg.new_role}`, 'info', 3500);
+            }
         }
+    }
+
+    private updateUIForRoleChange(userId: number, newRole: string) {
+        // Trigger change detection to update the UI dynamically for the role change
+        this.cdr.detectChanges();
     }
 
     // admin check: does my membership role equal 'admin' for this thread?
@@ -404,5 +483,7 @@ export class ThreadDetail implements OnDestroy {
         }
     }
 
-
+    getUserRole(): string {
+        return this.thread?.members?.find((m: any) => m.user_id === this.myUserId)?.role || 'N/A';
+    }
 }

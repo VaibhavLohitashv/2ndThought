@@ -1,29 +1,44 @@
+<!-- FILE: src/app/components/post-tree/post-tree.html -->
 <ng-template #renderPost let-p>
     <div class="post" [ngClass]="{ highlight: p._highlight }">
-        <div class="post-user">{{ p.user.full_name || p.user.email }}</div>
-        <div class="post-content">{{ p.content }}</div>
-        <div class="post-actions">
-            <button class="icon-action" (click)="toggleReply(p.id)">
-                <span class="icon">↩</span>
-                <small>Reply</small>
-            </button>
-            <button *ngIf="canDelete(p)" class="icon-action icon-danger" (click)="deletePost(p.id)">
-                <span class="icon">🗑</span>
-                <small>Delete</small>
-            </button>
-        </div>
-
-        <div class="reply-box" *ngIf="replyOpen[p.id]">
-            <textarea rows="3" [(ngModel)]="replyContent[p.id]"></textarea>
-            <div class="actions">
-                <button class="btn" (click)="toggleReply(p.id)">Cancel</button>
-                <button class="btn btn-primary" (click)="replyTo(p.id)"
-                    [disabled]="replying[p.id] || !(replyContent[p.id] && replyContent[p.id].trim())">Reply</button>
+        <div class="post-header">
+            <div class="post-avatar">
+                {{ (p.user?.full_name || p.user?.email || 'U').charAt(0).toUpperCase() }}
             </div>
-            <!-- reply errors displayed via toasts -->
+            <div class="post-meta">
+                <div class="post-user">{{ p.user?.full_name || p.user?.email || 'Unknown' }}</div>
+                <div class="post-time">{{ p.created_at | date:'short' }}</div>
+            </div>
         </div>
 
-        <div class="post-children" *ngIf="p.children && p.children.length>0">
+        <div class="post-content">{{ p.content }}</div>
+
+        <div class="post-actions">
+            <button class="action-btn reply" (click)="toggleReply(p.id)">
+                <span class="action-icon">↩️</span>
+                <span>Reply</span>
+            </button>
+            <button *ngIf="canDelete(p)" class="action-btn delete" (click)="deletePost(p.id)">
+                <span class="action-icon">🗑️</span>
+                <span>Delete</span>
+            </button>
+        </div>
+
+        <!-- Reply box -->
+        <div class="reply-box" *ngIf="replyOpen[p.id]">
+            <textarea class="reply-textarea" [(ngModel)]="replyContent[p.id]" (input)="typing.emit()"
+                placeholder="Write your reply..."></textarea>
+            <div class="reply-actions">
+                <button class="reply-btn" (click)="toggleReply(p.id)">Cancel</button>
+                <button class="reply-btn primary" (click)="replyTo(p.id)"
+                    [disabled]="replying[p.id] || !(replyContent[p.id] && replyContent[p.id].trim())">
+                    {{ replying[p.id] ? 'Sending...' : 'Reply' }}
+                </button>
+            </div>
+        </div>
+
+        <!-- Child posts -->
+        <div class="post-children" *ngIf="p.children && p.children.length > 0">
             <ng-container *ngFor="let c of p.children">
                 <ng-container *ngTemplateOutlet="renderPost; context: { $implicit: c }"></ng-container>
             </ng-container>

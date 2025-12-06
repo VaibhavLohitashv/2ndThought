@@ -1,23 +1,32 @@
-<div class="modal-backdrop">
-    <div class="modal-card">
-        <h3 class="modal-title">Create Thread</h3>
-
-        <label class="field">
-            <div class="label">Title</div>
-            <input type="text" [(ngModel)]="title" [disabled]="loading" placeholder="Thread title" />
-        </label>
-
-        <label class="field">
-            <div class="label">Description (optional)</div>
-            <textarea rows="4" [(ngModel)]="description" [disabled]="loading"
-                placeholder="Short description..."></textarea>
-        </label>
-
-        <div class="actions">
-            <button class="btn btn-ghost" (click)="close()" [disabled]="loading">Cancel</button>
-            <button class="btn btn-primary" (click)="submit()" [disabled]="loading || !title">Create</button>
+<!-- FILE: src/app/pages/threads/create-thread-modal.html -->
+<div class="modal-backdrop" (click)="close()">
+    <div class="modal-card" (click)="$event.stopPropagation()">
+        <div class="modal-header">
+            <h3 class="modal-title">Create New Thread</h3>
+            <button class="modal-close" (click)="close()">×</button>
         </div>
 
-        <!-- errors are displayed via toasts -->
+        <div class="modal-body">
+            <div class="form-group">
+                <label class="form-label">Title</label>
+                <input type="text" class="form-input" [(ngModel)]="title" [disabled]="loading"
+                    placeholder="Give your thread a title..." autofocus />
+            </div>
+
+            <div class="form-group">
+                <label class="form-label">Description (optional)</label>
+                <textarea class="form-input form-textarea" [(ngModel)]="description" [disabled]="loading"
+                    placeholder="What's this thread about?"></textarea>
+            </div>
+        </div>
+
+        <div class="modal-footer">
+            <button class="btn-cancel" (click)="close()" [disabled]="loading">
+                Cancel
+            </button>
+            <button class="btn-create" (click)="submit()" [disabled]="loading || !title.trim()">
+                {{ loading ? 'Creating...' : 'Create Thread' }}
+            </button>
+        </div>
     </div>
 </div>

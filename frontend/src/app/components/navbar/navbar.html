@@ -1,40 +1,93 @@
+<!-- FILE: src/app/components/navbar/navbar.html -->
 <header class="navbar">
     <div class="nav-left">
-        <a class="logo" routerLink="/threads">2ndThought</a>
+        <a class="logo" routerLink="/threads">
+            <app-logo-geometric [size]="40"></app-logo-geometric>
+            <span class="logo-text">2ndThought</span>
+        </a>
     </div>
 
     <div class="nav-center">
         <form (submit)="onSearch(); $event.preventDefault();" class="search-form">
-            <input type="text" placeholder="Search threads..." [(ngModel)]="query" name="q" />
-            <button type="submit" class="btn">Search</button>
+            <svg class="search-icon" width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor"
+                stroke-width="2">
+                <circle cx="11" cy="11" r="8" />
+                <path d="M21 21l-4.35-4.35" />
+            </svg>
+            <input type="text" class="search-input" placeholder="Search threads..." [(ngModel)]="query" name="q" />
         </form>
     </div>
 
     <div class="nav-right">
         <ng-container *ngIf="auth.user$ | async as user; else loggedOut">
+            <!-- Notifications -->
             <div class="notifications">
-                <button class="btn notif-btn" (click)="toggleNotifications()">
-                    🔔<span *ngIf="unreadCount>0" class="badge">{{unreadCount}}</span>
+                <button class="notif-btn" (click)="toggleNotifications()">
+                    <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+                        <path d="M18 8A6 6 0 0 0 6 8c0 7-3 9-3 9h18s-3-2-3-9" />
+                        <path d="M13.73 21a2 2 0 0 1-3.46 0" />
+                    </svg>
+                    <span *ngIf="unreadCount > 0" class="notif-badge">{{ unreadCount }}</span>
                 </button>
+
                 <div class="notif-dropdown" *ngIf="notifOpen">
-                    <div *ngIf="notifications.length===0" class="muted">No notifications</div>
-                    <ul>
-                        <li *ngFor="let n of notifications">
-                            <div class="notif-message">{{ n.message }}</div>
-                            <button *ngIf="n.thread_id" class="btn link"
-                                (click)="notifOpen=false; router.navigate(['/threads', n.thread_id])">Open</button>
+                    <div class="notif-header">
+                        <h4>Notifications</h4>
+                    </div>
+
+                    <div *ngIf="notifications.length === 0" class="notif-empty">
+                        <svg width="32" height="32" viewBox="0 0 24 24" fill="none" stroke="currentColor"
+                            stroke-width="1.5" opacity="0.5">
+                            <path d="M18 8A6 6 0 0 0 6 8c0 7-3 9-3 9h18s-3-2-3-9" />
+                            <path d="M13.73 21a2 2 0 0 1-3.46 0" />
+                        </svg>
+                        <p>No notifications yet</p>
+                    </div>
+
+                    <ul class="notif-list">
+                        <li *ngFor="let n of notifications" class="notif-item"
+                            (click)="n.thread_id && (notifOpen = false); n.thread_id && router.navigate(['/threads', n.thread_id])">
+                            <div class="notif-icon">
+                                <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor"
+                                    stroke-width="2">
+                                    <path d="M21 15a2 2 0 0 1-2 2H7l-4 4V5a2 2 0 0 1 2-2h14a2 2 0 0 1 2 2z" />
+                                </svg>
+                            </div>
+                            <div class="notif-content">
+                                <div class="notif-message">{{ n.message }}</div>
+                                <div class="notif-time">Just now</div>
+                            </div>
                         </li>
                     </ul>
                 </div>
             </div>
-            <button class="btn link profile-btn" (click)="goProfile()">
-                <span class="avatar initials">{{ getInitials(user) }}</span>
-                Profile
+
+            <!-- Profile -->
+            <button class="profile-btn" (click)="goProfile()">
+                <span class="avatar-initials">{{ getInitials(user) }}</span>
+                <span class="profile-name">Profile</span>
             </button>
-            <button class="btn" (click)="logout()">Logout</button>
+
+            <!-- Logout -->
+            <button class="logout-btn" (click)="logout()">
+                <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+                    <path d="M9 21H5a2 2 0 0 1-2-2V5a2 2 0 0 1 2-2h4" />
+                    <polyline points="16,17 21,12 16,7" />
+                    <line x1="21" y1="12" x2="9" y2="12" />
+                </svg>
+                <span>Logout</span>
+            </button>
         </ng-container>
+
         <ng-template #loggedOut>
-            <button class="btn" (click)="login()">Login</button>
+            <button class="auth-btn" (click)="login()">
+                <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+                    <path d="M15 3h4a2 2 0 0 1 2 2v14a2 2 0 0 1-2 2h-4" />
+                    <polyline points="10,17 15,12 10,7" />
+                    <line x1="15" y1="12" x2="3" y2="12" />
+                </svg>
+                <span>Sign In</span>
+            </button>
         </ng-template>
     </div>
 </header>

@@ -1,115 +1,130 @@
+/* FILE: src/app/components/toast/toast.css */
 .toast-wrapper {
     position: fixed;
-    top: 1rem;
-    right: 1rem;
-    z-index: 1200;
+    top: 88px;
+    right: 1.5rem;
+    z-index: 200;
     display: flex;
     flex-direction: column;
-    gap: 0.6rem;
-}
-
-/* toast animations */
-.toast-enter {
-    animation: toast-in 280ms cubic-bezier(.2, .9, .2, 1) both;
-}
-
-.toast-exit {
-    animation: toast-out 220ms cubic-bezier(.2, .9, .2, 1) both;
+    gap: 0.75rem;
+    max-width: 400px;
 }
 
 .toast {
-    min-width: 220px;
-    max-width: 420px;
-    padding: 0.8rem 1rem;
-    background: var(--surface);
-    border-left: 4px solid var(--accent);
-    box-shadow: var(--elevation-2);
+    display: flex;
+    align-items: flex-start;
+    gap: 0.75rem;
+    padding: 1rem 1.25rem;
+    background: var(--bg-secondary);
+    border: 1px solid var(--border-primary);
+    border-radius: var(--radius-lg);
+    box-shadow: var(--shadow-lg);
+    animation: toastIn var(--transition-base) ease-out;
+}
+
+@keyframes toastIn {
+    from {
+        opacity: 0;
+        transform: translateX(20px);
+    }
+
+    to {
+        opacity: 1;
+        transform: translateX(0);
+    }
+}
+
+.toast-icon {
+    width: 24px;
+    height: 24px;
     display: flex;
     align-items: center;
-    justify-content: space-between;
-    gap: 0.5rem;
-    border-radius: 8px;
-    font-size: 0.95rem;
+    justify-content: center;
+    border-radius: var(--radius-full);
+    font-size: 0.875rem;
+    flex-shrink: 0;
 }
 
-.toast.info {
-    border-left-color: var(--accent);
+.toast.info .toast-icon {
+    background: var(--info-bg);
+    color: var(--info);
 }
 
-.toast.success {
-    border-left-color: #28a745;
+.toast.success .toast-icon {
+    background: var(--success-bg);
+    color: var(--success);
 }
 
-.toast.warning {
-    border-left-color: #ffc107;
+.toast.warning .toast-icon {
+    background: var(--warning-bg);
+    color: var(--warning);
 }
 
-.toast.error {
-    border-left-color: var(--danger);
+.toast.error .toast-icon {
+    background: var(--danger-bg);
+    color: var(--danger);
 }
 
-.toast .msg {
-    flex: 1 1 auto;
-    color: var(--text);
+.toast-content {
+    flex: 1;
+    min-width: 0;
+}
+
+.toast-msg {
+    font-size: 0.875rem;
+    color: var(--text-primary);
+    line-height: 1.4;
 }
 
 .toast-close {
+    width: 24px;
+    height: 24px;
+    display: flex;
+    align-items: center;
+    justify-content: center;
     background: transparent;
     border: none;
-    font-size: 1.1rem;
-    line-height: 1;
+    border-radius: var(--radius-sm);
+    color: var(--text-tertiary);
+    font-size: 1.25rem;
     cursor: pointer;
-    padding: 0 0.2rem;
+    transition: all var(--transition-fast);
+    flex-shrink: 0;
 }
 
-.toast:hover {
-    transform: translateY(-4px);
-    box-shadow: var(--elevation-3);
+.toast-close:hover {
+    background: var(--bg-tertiary);
+    color: var(--text-primary);
 }
 
-@keyframes toast-in {
-    from {
-        transform: translateY(-8px) scale(.98);
-        opacity: 0
-    }
-
-    to {
-        transform: translateY(0) scale(1);
-        opacity: 1
-    }
+/* Border accent colors */
+.toast.info {
+    border-left: 3px solid var(--info);
 }
 
-@keyframes toast-out {
-    from {
-        transform: translateY(0) scale(1);
-        opacity: 1
-    }
-
-    to {
-        transform: translateY(-6px) scale(.98);
-        opacity: 0
-    }
+.toast.success {
+    border-left: 3px solid var(--success);
 }
 
-@media (max-width: 900px) {
+.toast.warning {
+    border-left: 3px solid var(--warning);
+}
+
+.toast.error {
+    border-left: 3px solid var(--danger);
+}
+
+/* Responsive */
+@media (max-width: 480px) {
     .toast-wrapper {
-        right: 0.5rem;
-        top: 0.5rem;
-    }
-}
-
-@media (max-width: 600px) {
-    .toast-wrapper {
-        right: 0.5rem;
-        left: 0.5rem;
         top: auto;
         bottom: 1rem;
-        align-items: center;
+        right: 1rem;
+        left: 1rem;
+        max-width: none;
     }
 
     .toast {
         width: 100%;
-        max-width: none;
-        border-radius: 10px;
     }
 }

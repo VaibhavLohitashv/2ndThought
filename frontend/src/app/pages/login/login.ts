@@ -1,9 +1,14 @@
+// FILE: src/app/pages/login/login.ts
 import { Component } from '@angular/core';
 import { Router, ActivatedRoute } from '@angular/router';
+import { CommonModule } from '@angular/common';
 import { AuthService } from '../../services/auth/auth';
+import { LogoGeometricComponent } from '../../components/logo/logo';
 
 @Component({
   selector: 'app-login',
+  standalone: true,
+  imports: [CommonModule, LogoGeometricComponent],
   templateUrl: './login.html',
   styleUrls: ['./login.css']
 })

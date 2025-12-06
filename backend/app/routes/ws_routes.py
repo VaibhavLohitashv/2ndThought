@@ -1,4 +1,5 @@
 from typing import Any
+import json
 
 import firebase_admin.auth as firebase_auth
 from fastapi import APIRouter, HTTPException, WebSocket, WebSocketDisconnect, status
@@ -84,7 +85,50 @@ async def ws_thread(websocket: WebSocket, thread_id: int):
         await manager.connect_thread(thread_id, websocket)
         try:
             while True:
-                await websocket.receive_text()
+                # receive text messages from client (e.g. typing notifications)
+                data = await websocket.receive_text()
+                try:
+                    msg = json.loads(data)
+                except Exception:
+                    # ignore non-json messages
+                    continue
+
+                # handle typing events from connected client; use authenticated user info
+                mtype = msg.get("type") if isinstance(msg, dict) else None
+                if mtype == "typing":
+                    payload = {
+                        "type": "typing",
+                        "thread_id": thread_id,
+                        "user": {
+                            "id": user.id,
+                            "full_name": user.full_name,
+                        },
+                    }
+                    # broadcast locally
+                    await manager.broadcast_thread(thread_id, payload)
+                    # publish to redis so other processes can forward
+                    try:
+                        from app.utils.redis_notifications import publish_thread_event
+
+                        await publish_thread_event(thread_id, payload)
+                    except Exception:
+                        pass
+                elif mtype == "typing_stop":
+                    payload = {
+                        "type": "typing_stop",
+                        "thread_id": thread_id,
+                        "user": {"id": user.id},
+                    }
+                    await manager.broadcast_thread(thread_id, payload)
+                    try:
+                        from app.utils.redis_notifications import publish_thread_event
+
+                        await publish_thread_event(thread_id, payload)
+                    except Exception:
+                        pass
+                else:
+                    # ignore other message types for now
+                    continue
         except WebSocketDisconnect:
             await manager.disconnect_thread(thread_id, websocket)
 

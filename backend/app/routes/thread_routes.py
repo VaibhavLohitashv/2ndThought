@@ -12,6 +12,7 @@ from app.database.db import SessionLocal
 from app.database.models import Thread, ThreadMembership, ThreadRole, User
 from app.schemas.responses import ThreadRead
 from app.schemas.thread_schemas import ThreadCreate
+from app.utils.websocket_manager import manager
 
 router = APIRouter(tags=["Threads"])
 
@@ -319,6 +320,14 @@ async def promote_member(
                 status_code=status.HTTP_500_INTERNAL_SERVER_ERROR,
                 detail="Could not promote member",
             )
+        await manager.broadcast_thread(
+            thread_id,
+            {
+                "type": "role_updated",
+                "user_id": user_id,
+                "new_role": ThreadRole.moderator.value,
+            },
+        )
         return {"status": "ok", "user_id": user_id, "role": ThreadRole.moderator.value}
 
     # member -> moderator
@@ -339,6 +348,10 @@ async def promote_member(
             status_code=status.HTTP_500_INTERNAL_SERVER_ERROR,
             detail="Could not promote member",
         )
+    await manager.broadcast_thread(
+        thread_id,
+        {"type": "role_updated", "user_id": user_id, "new_role": membership.role.value},
+    )
     return {"status": "ok", "user_id": user_id, "role": membership.role.value}
 
 
@@ -411,6 +424,10 @@ async def demote_member(
             status_code=status.HTTP_500_INTERNAL_SERVER_ERROR,
             detail="Could not demote member",
         )
+    await manager.broadcast_thread(
+        thread_id,
+        {"type": "role_updated", "user_id": user_id, "new_role": membership.role.value},
+    )
     return {"status": "ok", "user_id": user_id, "role": membership.role.value}
 
 
