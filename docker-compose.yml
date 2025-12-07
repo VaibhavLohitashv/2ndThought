@@ -1,5 +1,3 @@
-version: "3.9"
-
 services:
   db:
     image: postgres:15
@@ -27,6 +25,7 @@ services:
     build:
       context: ./backend
       dockerfile: Dockerfile
+    image: vaibhavlohitashv/forum-backend
     container_name: forum_backend
     ports:
       - "8000:8000"
@@ -48,6 +47,7 @@ services:
     build:
       context: ./frontend
       dockerfile: Dockerfile
+    image: vaibhavlohitashv/forum-frontend
     container_name: forum_frontend
     ports:
       - "4200:4200"
