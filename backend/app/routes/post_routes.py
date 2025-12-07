@@ -1,12 +1,21 @@
-from typing import Any, List
+"""
+Post routes for the Realtime Discussion Forum.
 
-from fastapi import APIRouter, Depends, HTTPException, status
+This module handles API endpoints related to posts, including creation,
+retrieval, and real-time updates via WebSockets.
+"""
+
+from typing import Any, List
+from fastapi import APIRouter, Depends, HTTPException, status, UploadFile, File, Form
+from fastapi.responses import StreamingResponse
+from io import BytesIO
 from sqlalchemy import and_
 from sqlalchemy.ext.asyncio import AsyncSession
 from sqlalchemy.future import select
 from sqlalchemy.orm import selectinload
 
 from app.auth.firebase_auth import get_current_user
+from app.core.config import settings
 from app.database.db import SessionLocal
 from app.database.models import Post, Thread, ThreadMembership, ThreadRole, User
 from app.schemas.post_schemas import PostCreate, ReplyCreate
@@ -18,6 +27,12 @@ router = APIRouter(tags=["Posts"])
 
 
 async def get_db() -> AsyncSession:
+    """
+    Dependency to get an async database session.
+
+    Yields:
+        AsyncSession: A database session.
+    """
     async with SessionLocal() as session:
         yield session
 
@@ -27,12 +42,34 @@ async def get_db() -> AsyncSession:
 # -------------------------
 @router.post("/", response_model=dict)
 async def create_post(
-    data: PostCreate,
+    thread_id: int = Form(...),
+    content: str = Form(...),
+    image: UploadFile = File(None),
     current_user: Any = Depends(get_current_user),
     db: AsyncSession = Depends(get_db),
 ):
+    """
+    Create a new post in a thread.
+
+    Allows users to create top-level posts with optional image attachments.
+    Validates thread existence and user membership before creating the post.
+    Broadcasts the new post via WebSocket and sends notifications.
+
+    Args:
+        thread_id (int): The ID of the thread to post in.
+        content (str): The text content of the post.
+        image (UploadFile, optional): An optional image file to attach.
+        current_user (Any): The authenticated user.
+        db (AsyncSession): The database session.
+
+    Returns:
+        dict: Status and post data.
+
+    Raises:
+        HTTPException: If thread not found, user not a member, or creation fails.
+    """
     # thread exists?
-    thread_res = await db.execute(select(Thread).where(Thread.id == data.thread_id))
+    thread_res = await db.execute(select(Thread).where(Thread.id == thread_id))
     thread = thread_res.scalar_one_or_none()
     if not thread:
         raise HTTPException(
@@ -40,10 +77,12 @@ async def create_post(
         )
 
     # membership required
+    # Fetch the thread associated with the parent post
+
     mem_res = await db.execute(
         select(ThreadMembership).where(
             and_(
-                ThreadMembership.thread_id == data.thread_id,
+                ThreadMembership.thread_id == thread_id,
                 ThreadMembership.user_id == current_user.id,
             )
         )
@@ -54,10 +93,19 @@ async def create_post(
             status_code=status.HTTP_403_FORBIDDEN, detail="Only thread members can post"
         )
 
+    image_data = None
+    image_filename = None
+    if image:
+        # Store image data in database
+        image_data = await image.read()
+        image_filename = image.filename
+
     post = Post(
-        content=data.content,
+        content=content,
+        image_data=image_data,
+        image_filename=image_filename,
         user_id=current_user.id,
-        thread_id=data.thread_id,
+        thread_id=thread_id,
         parent_id=None,
     )
     db.add(post)
@@ -78,6 +126,9 @@ async def create_post(
         "post": {
             "id": post.id,
             "content": post.content,
+            "image_url": post.image_data
+            and f"{settings.BASE_URL}/posts/images/{post.id}"
+            or None,
             "parent_id": post.parent_id,
             "user": {
                 "id": current_user.id,
@@ -101,6 +152,9 @@ async def create_post(
         from app.utils.redis_notifications import publish_thread_event
 
         await publish_thread_event(post.thread_id, payload)
+    except Exception as e:
+        # Log the exception or handle it appropriately
+        print(f"Error publishing thread event: {e}")
     except Exception:
         pass
     # notify all thread members (except author)
@@ -133,7 +187,8 @@ async def create_post(
 @router.post("/{post_id}/reply", response_model=dict)
 async def reply_to_post(
     post_id: int,
-    data: ReplyCreate,
+    content: str = Form(...),
+    image: UploadFile = File(None),
     current_user: Any = Depends(get_current_user),
     db: AsyncSession = Depends(get_db),
 ):
@@ -160,8 +215,17 @@ async def reply_to_post(
             detail="Only thread members can reply",
         )
 
+    image_data = None
+    image_filename = None
+    if image:
+        # Store image data in database
+        image_data = await image.read()
+        image_filename = image.filename
+
     reply = Post(
-        content=data.content,
+        content=content,
+        image_data=image_data,
+        image_filename=image_filename,
         user_id=current_user.id,
         thread_id=parent.thread_id,
         parent_id=parent.id,
@@ -184,6 +248,9 @@ async def reply_to_post(
         "post": {
             "id": reply.id,
             "content": reply.content,
+            "image_url": reply.image_data
+            and f"{settings.BASE_URL}/posts/images/{reply.id}"
+            or None,
             "parent_id": reply.parent_id,
             "user": {
                 "id": current_user.id,
@@ -220,7 +287,7 @@ async def reply_to_post(
         members = members_res.scalars().all()
         notif = {
             "type": "thread_reply",
-            "message": f"{current_user.full_name} replied in {getattr(thread, 'title', 'a thread')}",
+            "message": f"{current_user.full_name} replied in {getattr(parent.thread, 'title', 'a thread')}",
             "post": payload["post"],
             "thread_id": reply.thread_id,
         }
@@ -251,6 +318,55 @@ async def reply_to_post(
             pass
 
     return {"status": "ok", "reply": payload["post"]}
+
+
+# -------------------------
+# GET POST IMAGE
+# -------------------------
+@router.get("/images/{post_id}")
+async def get_post_image(post_id: int, db: AsyncSession = Depends(get_db)):
+    """
+    Serve image for a post from database.
+
+    Args:
+        post_id (int): The ID of the post.
+        db (AsyncSession): The database session.
+
+    Returns:
+        StreamingResponse: The image file.
+
+    Raises:
+        HTTPException: If post not found or no image.
+    """
+    post = await db.get(Post, post_id)
+    if not post:
+        raise HTTPException(
+            status_code=status.HTTP_404_NOT_FOUND, detail="Post not found"
+        )
+
+    if not post.image_data:
+        raise HTTPException(
+            status_code=status.HTTP_404_NOT_FOUND, detail="No image found"
+        )
+
+    # Determine content type based on filename
+    content_type = "image/jpeg"  # default
+    if post.image_filename:
+        ext = post.image_filename.lower().split(".")[-1]
+        if ext == "png":
+            content_type = "image/png"
+        elif ext == "gif":
+            content_type = "image/gif"
+        elif ext == "webp":
+            content_type = "image/webp"
+
+    return StreamingResponse(
+        BytesIO(post.image_data),
+        media_type=content_type,
+        headers={
+            "Content-Disposition": f"inline; filename={post.image_filename or 'image.jpg'}"
+        },
+    )
 
 
 # -------------------------
@@ -390,6 +506,9 @@ async def get_posts(thread_id: int, db: AsyncSession = Depends(get_db)):
         node = {
             "id": p.id,
             "content": p.content,
+            "image_url": p.image_data
+            and f"{settings.BASE_URL}/posts/images/{p.id}"
+            or None,
             "parent_id": p.parent_id,
             "user": user_payload,
             "created_at": str(p.created_at),

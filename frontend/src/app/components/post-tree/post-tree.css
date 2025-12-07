@@ -79,6 +79,17 @@
     word-break: break-word;
 }
 
+.post-image {
+    margin-top: 1rem;
+}
+
+.post-img {
+    max-width: 100%;
+    height: 12rem;
+    border-radius: var(--radius-md);
+    border: 1px solid var(--border-primary);
+}
+
 .post-actions {
     display: flex;
     align-items: center;
@@ -155,6 +166,53 @@
     outline: none;
     border-color: var(--accent-primary);
     box-shadow: 0 0 0 3px var(--accent-subtle);
+}
+
+.image-upload {
+    display: flex;
+    align-items: center;
+    gap: 0.5rem;
+    margin-top: 0.75rem;
+    padding: 0.5rem;
+    background: var(--bg-secondary);
+    border-radius: var(--radius-md);
+}
+
+.image-btn {
+    padding: 0.5rem 0.75rem;
+    background: var(--accent-primary);
+    color: white;
+    border: none;
+    border-radius: var(--radius-sm);
+    cursor: pointer;
+    font-size: 0.875rem;
+    transition: all var(--transition-base);
+}
+
+.image-btn:hover {
+    background: var(--accent-secondary);
+}
+
+.image-name {
+    flex: 1;
+    font-size: 0.875rem;
+    color: var(--text-secondary);
+    overflow: hidden;
+    text-overflow: ellipsis;
+    white-space: nowrap;
+}
+
+.remove-btn {
+    background: none;
+    border: none;
+    cursor: pointer;
+    font-size: 0.875rem;
+    color: var(--text-tertiary);
+    transition: color var(--transition-base);
+}
+
+.remove-btn:hover {
+    color: var(--error);
 }
 
 .reply-actions {

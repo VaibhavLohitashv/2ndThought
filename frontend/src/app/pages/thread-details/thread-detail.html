@@ -27,7 +27,7 @@
                 </div>
                 <div class="meta-item">
                     <span class="meta-icon">👥</span>
-                    <span>{{ thread.members?.length || 0 }} members</span>
+                    <span>{{ thread.members?.length || 0 }} member(s)</span>
                 </div>
             </div>
         </div>
@@ -102,6 +102,10 @@
             </div>
             <textarea class="post-textarea" [(ngModel)]="newPostContent" (input)="onCreateInput()"
                 placeholder="Share your thoughts..."></textarea>
+            <input type="file" accept="image/*" (change)="onFileSelected($event)" class="image-input">
+            <div *ngIf="selectedImage" class="selected-image-preview">
+                <p>Selected: {{ selectedImage!.name }}</p>
+            </div>
             <div class="create-post-footer">
                 <button class="btn" (click)="activeTab = 'posts'">Cancel</button>
                 <button class="btn btn-primary" (click)="createPost()"
@@ -138,6 +142,10 @@
         <section *ngIf="activeTab === 'admin'" class="admin-section">
             <div class="admin-header">
                 <h3>Manage Members</h3>
+                <button class="btn btn-danger delete-thread-btn" (click)="confirmDeleteThread()" [disabled]="!isAdmin()"
+                    title="Delete Thread">
+                    🗑️ Delete Thread
+                </button>
             </div>
 
             <table class="admin-table">
@@ -192,6 +200,21 @@
                 <div class="leave-modal-actions">
                     <button class="btn" (click)="showLeaveConfirm = false">Cancel</button>
                     <button class="btn btn-danger" (click)="leaveConfirmed()">Leave Thread</button>
+                </div>
+            </div>
+        </div>
+
+        <!-- Delete thread confirmation modal -->
+        <div class="modal-backdrop" *ngIf="showDeleteConfirm" (click)="showDeleteConfirm = false">
+            <div class="modal delete-modal" (click)="$event.stopPropagation()">
+                <div class="delete-modal-header">
+                    <div class="delete-icon">⚠️</div>
+                    <h4>Delete Thread?</h4>
+                </div>
+                <p>This action cannot be undone. All posts, replies, and member data will be permanently deleted.</p>
+                <div class="delete-modal-actions">
+                    <button class="btn" (click)="showDeleteConfirm = false">Cancel</button>
+                    <button class="btn btn-danger" (click)="deleteConfirmed()">Delete Thread</button>
                 </div>
             </div>
         </div>

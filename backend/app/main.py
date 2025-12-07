@@ -1,5 +1,13 @@
+"""
+Main FastAPI application for the Realtime Discussion Forum.
+
+This module sets up the FastAPI application, includes routers, middleware,
+static file serving, and event handlers for startup and shutdown.
+"""
+
 from fastapi import APIRouter, FastAPI, Request
 from fastapi.middleware.cors import CORSMiddleware
+from fastapi.staticfiles import StaticFiles
 
 from app.core.config import settings
 from app.routes import ws_routes
@@ -20,14 +28,31 @@ app.add_middleware(
     allow_headers=["*"],
 )
 
+app.mount("/static", StaticFiles(directory="static"), name="static")
+
 
 @app.get("/debug/headers")
 async def debug_headers(request: Request):
+    """
+    Debug endpoint to return request headers.
+
+    Args:
+        request (Request): The incoming HTTP request.
+
+    Returns:
+        dict: Dictionary of request headers.
+    """
     return dict(request.headers)
 
 
 @app.get("/")
 async def welcome():
+    """
+    Welcome endpoint providing basic API information.
+
+    Returns:
+        dict: Welcome message with links to API documentation.
+    """
     return {
         "message": "Welcome to Realtime Discussion Forum Web",
         "API docs": "/docs",
@@ -43,6 +68,11 @@ app.include_router(ws_routes.router, prefix="")
 
 @app.on_event("startup")
 async def startup_event():
+    """
+    Startup event handler.
+
+    Starts the Redis listener if REDIS_URL is configured in settings.
+    """
     # start redis listener if REDIS_URL is configured
     redis_url = getattr(settings, "REDIS_URL", None)
     if redis_url:
@@ -51,4 +81,9 @@ async def startup_event():
 
 @app.on_event("shutdown")
 async def shutdown_event():
+    """
+    Shutdown event handler.
+
+    Stops the Redis listener.
+    """
     await stop_redis_listener()

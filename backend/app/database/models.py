@@ -1,6 +1,16 @@
 import enum
 
-from sqlalchemy import Column, DateTime, Enum, ForeignKey, Integer, String, Text, func
+from sqlalchemy import (
+    Column,
+    DateTime,
+    Enum,
+    ForeignKey,
+    Integer,
+    String,
+    Text,
+    LargeBinary,
+    func,
+)
 from sqlalchemy.orm import declarative_base, relationship
 
 Base = declarative_base()
@@ -70,6 +80,8 @@ class Post(Base):
 
     parent_id = Column(Integer, ForeignKey("posts.id"), nullable=True)
     content = Column(Text, nullable=False)
+    image_data = Column(LargeBinary, nullable=True)
+    image_filename = Column(String, nullable=True)
 
     user_id = Column(Integer, ForeignKey("users.id"), nullable=False)
     created_at = Column(DateTime(timezone=True), server_default=func.now())

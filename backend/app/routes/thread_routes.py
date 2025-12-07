@@ -1,15 +1,22 @@
+"""
+Thread routes for the Realtime Discussion Forum.
+
+This module handles API endpoints related to threads, including creation,
+membership management, and role updates with real-time notifications.
+"""
+
 from typing import Any, List
 
 from sqlalchemy import or_
 
 from fastapi import APIRouter, Depends, HTTPException, status
-from sqlalchemy import and_
+from sqlalchemy import and_, delete, or_
 from sqlalchemy.ext.asyncio import AsyncSession
 from sqlalchemy.future import select
 
 from app.auth.firebase_auth import get_current_user
 from app.database.db import SessionLocal
-from app.database.models import Thread, ThreadMembership, ThreadRole, User
+from app.database.models import Post, Thread, ThreadMembership, ThreadRole, User
 from app.schemas.responses import ThreadRead
 from app.schemas.thread_schemas import ThreadCreate
 from app.utils.websocket_manager import manager
@@ -18,6 +25,12 @@ router = APIRouter(tags=["Threads"])
 
 
 async def get_db() -> AsyncSession:
+    """
+    Dependency to get an async database session.
+
+    Yields:
+        AsyncSession: A database session.
+    """
     async with SessionLocal() as session:
         yield session
 
@@ -261,6 +274,13 @@ async def delete_thread(
         )
 
     try:
+        # Delete posts first
+        await db.execute(delete(Post).where(Post.thread_id == thread_id))
+        # Delete memberships
+        await db.execute(
+            delete(ThreadMembership).where(ThreadMembership.thread_id == thread_id)
+        )
+        # Then delete the thread
         await db.delete(thread)
         await db.commit()
     except Exception:
@@ -279,6 +299,25 @@ async def promote_member(
     current_user: Any = Depends(get_current_user),
     db: AsyncSession = Depends(get_db),
 ):
+    """
+    Promote a member to the next role level in a thread.
+
+    Only thread admins can promote members. Roles progress: member -> moderator -> admin.
+    If no membership exists, creates one as moderator.
+    Broadcasts role update via WebSocket.
+
+    Args:
+        thread_id (int): The ID of the thread.
+        user_id (int): The ID of the user to promote.
+        current_user (Any): The authenticated user (must be admin).
+        db (AsyncSession): The database session.
+
+    Returns:
+        dict: Status, user_id, and new role.
+
+    Raises:
+        HTTPException: If not authorized, or promotion fails.
+    """
     requester_mem = (
         await db.execute(
             select(ThreadMembership).where(
@@ -362,6 +401,25 @@ async def demote_member(
     current_user: Any = Depends(get_current_user),
     db: AsyncSession = Depends(get_db),
 ):
+    """
+    Demote a member to the previous role level in a thread.
+
+    Only thread admins can demote members. Roles regress: admin -> moderator -> member.
+    Prevents demoting the last admin.
+    Broadcasts role update via WebSocket.
+
+    Args:
+        thread_id (int): The ID of the thread.
+        user_id (int): The ID of the user to demote.
+        current_user (Any): The authenticated user (must be admin).
+        db (AsyncSession): The database session.
+
+    Returns:
+        dict: Status, user_id, and new role.
+
+    Raises:
+        HTTPException: If not authorized, membership not found, or demotion fails.
+    """
     requester_mem = (
         await db.execute(
             select(ThreadMembership).where(

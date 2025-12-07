@@ -16,6 +16,8 @@ class Settings(BaseSettings):
     FIREBASE_PROJECT_ID: str
     # optional Redis URL (may be absent in single-process setups)
     REDIS_URL: str | None = None
+    # Base URL for API (used for generating absolute image URLs)
+    BASE_URL: str = "http://localhost:8000"
 
     class Config:
         env_file = ".env"

@@ -64,8 +64,18 @@ export class ThreadsService {
         return firstValueFrom(obs) as Promise<any>;
     }
 
-    async replyToPost(postId: number, content: string) {
-        const obs = this.http.post(`${this.base}/posts/${postId}/reply`, { content }, { headers: this.headers() });
+    async replyToPost(postId: number, content: string, image?: File) {
+        const formData = new FormData();
+        formData.append('content', content);
+        if (image) {
+            formData.append('image', image);
+        }
+        const obs = this.http.post(`${this.base}/posts/${postId}/reply`, formData, { headers: this.headers() });
+        return firstValueFrom(obs) as Promise<any>;
+    }
+
+    async deleteThread(threadId: number) {
+        const obs = this.http.delete(`${this.base}/threads/${threadId}`, { headers: this.headers() });
         return firstValueFrom(obs) as Promise<any>;
     }
 

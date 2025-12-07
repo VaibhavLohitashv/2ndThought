@@ -1,183 +1,393 @@
-## Existing Content
-This is the existing content of the README file that provides an overview of the project.
-
----
-
 # Realtime Forum
 
-This repository contains a simple realtime forum application with a FastAPI backend and an Angular frontend. The project supports running locally (native Python/Node) and using Docker Compose for a reproducible development environment.
+A realtime discussion forum application built with FastAPI backend and Angular frontend. Features include Firebase authentication, PostgreSQL database, Redis for notifications, WebSocket real-time updates, and Docker support for easy development and deployment.
 
----
+## Author
 
-**Contents**
+Vaibhav Lohitashv
 
-- `backend/` — FastAPI backend, Alembic migrations, and configuration
-- `frontend/` — Angular frontend
-- `docker-compose.yml` — Compose file to run Postgres, Redis, backend and frontend
-- `backend/.env` — Environment file used by the backend in development
+## Repository
 
----
+- **GitHub**: [https://github.com/VaibhavLohitashv/2ndThought](https://github.com/VaibhavLohitashv/2ndThought)
+- **Current Branch**: main
 
-## Prerequisites (local)
+## Tech Stack
 
-- Python 3.10+ (for backend)
-- Node.js 20+ and npm (for frontend build & dev server)
-- PostgreSQL (if running DB locally)
-- Redis (if running locally)
+- **Backend**: FastAPI (Python), SQLAlchemy, Alembic (migrations), Pydantic
+- **Frontend**: Angular, TypeScript
+- **Database**: PostgreSQL
+- **Cache/Notifications**: Redis
+- **Authentication**: Firebase Auth
+- **Real-time**: WebSockets
+- **Containerization**: Docker, Docker Compose
 
-## Run Locally (recommended for development)
+## Project Structure
 
-### Backend (native)
-
-1. Create and activate a Python virtual environment:
-
-```powershell
-python -m venv .venv
-.\.venv\Scripts\Activate.ps1
+```
+realtime-forum/
+├── backend/                    # FastAPI backend
+│   ├── app/
+│   │   ├── auth/              # Firebase authentication
+│   │   ├── core/              # Configuration, security, exceptions
+│   │   ├── database/          # DB models and connection
+│   │   ├── routes/            # API endpoints (posts, threads, users, WS)
+│   │   ├── schemas/           # Pydantic schemas
+│   │   └── utils/             # Redis notifications, WebSocket manager
+│   ├── alembic/               # Database migrations
+│   ├── scripts/               # Startup scripts
+│   ├── static/                # Static files (images)
+│   ├── tests/                 # Unit tests
+│   ├── .env.example           # Environment template
+│   ├── Dockerfile             # Backend container
+│   ├── pyproject.toml         # Python dependencies
+│   ├── requirements.txt       # Python requirements
+│   └── README.md
+├── frontend/                   # Angular frontend
+│   ├── src/
+│   │   ├── app/
+│   │   │   ├── components/    # UI components (navbar, posts, etc.)
+│   │   │   ├── guards/        # Route guards
+│   │   │   ├── pages/         # Page components (login, profile, threads)
+│   │   │   ├── services/      # Angular services
+│   │   │   └── shared/        # Shared utilities
+│   │   ├── environments/      # Environment configurations
+│   │   └── ...
+│   ├── Dockerfile             # Frontend container
+│   ├── package.json           # Node dependencies
+│   └── ...
+├── docker-compose.yml         # Docker Compose configuration
+└── README.md                  # This file
 ```
 
-2. Install dependencies:
+## Prerequisites
+
+### For Local Development
+- Python 3.10 or higher
+- Node.js 20+ and npm
+- PostgreSQL 13+ (if running locally)
+- Redis 6+ (if running locally)
+
+### For Docker Development
+- Docker Engine
+- Docker Compose
+
+## Installation
+
+1. **Clone the repository**:
+   ```bash
+   git clone https://github.com/VaibhavLohitashv/2ndThought.git
+   cd realtime-forum
+   ```
+
+2. **Set up environment variables** (see Environment Variables section below)
+
+## Running the Application
+
+### Option 1: Local Development (Recommended for active development)
+
+#### Backend Setup
+
+1. **Navigate to backend directory**:
+   ```powershell
+   cd backend
+   ```
+
+2. **Create and activate virtual environment**:
+   ```powershell
+   python -m venv .venv
+   .\.venv\Scripts\Activate.ps1
+   ```
+
+3. **Install dependencies**:
+   ```powershell
+   pip install -r requirements.txt
+   ```
+   Or use uv if installed
+   ```powershell
+   uv sync
+   ```
+
+4. **Set up environment variables**:
+   - Copy `.env.example` to `.env`
+   - Fill in your configuration values (see Environment Variables section)
+
+5. **Set up database**:
+   - Ensure PostgreSQL is running locally
+   - Create database and user as specified in `.env`
+   - Run migrations:
+     ```powershell
+     alembic upgrade head
+     ```
+
+6. **Start the backend server**:
+   ```powershell
+   uvicorn app.main:app --reload
+   ```
+   or
+   ```powershell
+   uv run uvicorn app.main:app --reload
+   ```
+
+#### Frontend Setup
+
+1. **Navigate to frontend directory** (in a new terminal):
+   ```powershell
+   cd frontend
+   ```
+
+2. **Install dependencies**:
+   ```powershell
+   npm install
+   ```
+
+3. **Start development server**:
+   ```powershell
+   npm start
+   ```
+
+4. **Access the application**:
+   - Frontend: http://localhost:4200
+   - Backend API: http://localhost:8000
+   - API Documentation: http://localhost:8000/docs
+
+### Option 2: Docker Compose (Recommended for consistent environment)
+
+1. **Build and start all services**:
+   ```powershell
+   docker-compose up -d --build
+   ```
+
+2. **Run database migrations** (required for fresh database):
+   ```powershell
+   docker-compose exec backend alembic upgrade head
+   ```
+
+3. **Access the application**:
+   - Frontend: http://localhost:4200
+   - Backend API: http://localhost:8000
+   - Database: localhost:5432 (from host)
+   - Redis: localhost:6379 (from host)
+
+#### Useful Docker Commands
 
 ```powershell
-pip install -r backend/requirements.txt
-```
-
-3. Copy `backend/.env` and adjust values if you need to run Postgres/Redis locally. Example keys included in `backend/.env`:
-
-```text
-DB_HOST=localhost
-DB_PORT=5432
-DB_USER=forum
-DB_PASSWORD=forum
-DB_NAME=forum_db
-
-SECRET_KEY=your-secret-key-change-in-production
-ALGORITHM=HS256
-ACCESS_TOKEN_EXPIRE_MINUTES=30
-
-GOOGLE_APPLICATION_CREDENTIALS=discussion-forum-a7895-firebase-adminsdk-fbsvc-15ca88afde.json
-FIREBASE_PROJECT_ID=discussion-forum-a7895
-
-REDIS_URL=redis://localhost:6379
-```
-
-4. Start local Postgres and Redis (if not using Docker). Create the `forum_db` database and user matching the `.env` values.
-
-5. Apply alembic migrations:
-
-```powershell
-# from repository root
-cd backend
-alembic upgrade head
-```
-
-6. Run the backend:
-
-```powershell
-uvicorn app.main:app --reload --host 0.0.0.0 --port 8000
-```
-
-### Frontend (native)
-
-1. Install dependencies and run dev server:
-
-```powershell
-cd frontend
-npm install
-npm start
-```
-
-2. The Angular dev server runs on `http://localhost:4200`. The frontend expects the API at `http://localhost:8000` by default (see `frontend/src/environments/environment.ts`).
-
----
-
-## Run with Docker Compose (recommended for consistent dev environment)
-
-The repository contains a `docker-compose.yml` that runs:
-- `db` (Postgres)
-- `redis` (Redis)
-- `backend` (builds `./backend` image)
-- `frontend` (builds `./frontend` image)
-
-### Build and start all services
-
-```powershell
-# from repository root
-docker-compose up -d --build
-```
-
-### Apply migrations (required once per fresh DB)
-
-The backend reads `backend/.env` via the Compose `env_file`. When running in Docker the DB host should be `db` (the service name). To run migrations using the backend container:
-
-```powershell
-# run alembic inside the backend container
-docker-compose exec backend alembic upgrade head
-```
-
-If you prefer to run migrations before starting the backend service:
-
-```powershell
-docker-compose up -d db redis
-# wait for Postgres to be ready
-docker-compose run --rm backend alembic upgrade head
-docker-compose up -d backend frontend
-```
-
-### Useful docker-compose commands
-
-```powershell
-# show running containers
+# View running containers
 docker-compose ps
 
-# view logs (all services)
+# View logs for all services
 docker-compose logs -f
 
-# view logs for a specific service
+# View logs for specific service
 docker-compose logs -f backend
 
-# stop and remove containers, networks, volumes created by compose
+# Stop and remove containers
 docker-compose down
+
+# Rebuild specific service
+docker-compose up -d --build backend
 ```
 
----
+## Environment Variables
 
-## Environment and secrets
+### Backend Environment (.env)
 
-- `backend/.env` contains the default development environment values. In Docker Compose the backend uses `env_file: ./backend/.env` and additionally overrides `DB_HOST=db` and `REDIS_URL=redis://redis:6379` so the container connects to the Compose services.
-- The Firebase credentials JSON file `backend/discussion-forum-a7895-firebase-adminsdk-fbsvc-15ca88afde.json` is mounted into the backend container at `/secrets/firebase.json` and `GOOGLE_APPLICATION_CREDENTIALS` is set to this path in the compose file. If you want to avoid a host bind mount, consider using Docker secrets or a secret manager.
+Create `backend/.env` by copying `backend/.env.example` and configuring the following variables:
 
-### Keep secrets secure
+```dotenv
+# Database Configuration
+DB_HOST=localhost          # Host for PostgreSQL (use 'db' for Docker Compose)
+DB_PORT=5432               # PostgreSQL port
+DB_USER=forum              # Database username
+DB_PASSWORD=forum          # Database password
+DB_NAME=forum_db           # Database name
 
-- Do not check real production secrets into source control.
-- For production consider using Docker secrets, environment variables set by your CI, or a secrets manager like AWS Secrets Manager / Azure Key Vault.
+# JWT Authentication
+SECRET_KEY=your-super-secret-key-change-in-production  # Random secret key for JWT
+ALGORITHM=HS256           # JWT algorithm
+ACCESS_TOKEN_EXPIRE_MINUTES=30  # Token expiry in minutes
 
----
+# Firebase Authentication
+GOOGLE_APPLICATION_CREDENTIALS=discussion-forum-a7895-firebase-adminsdk-fbsvc-15ca88afde.json  # Path to Firebase service account JSON
+FIREBASE_PROJECT_ID=discussion-forum-a7895  # Firebase project ID
+
+# Redis Configuration
+REDIS_URL=redis://localhost:6379  # Redis URL (use 'redis://redis:6379' for Docker Compose)
+```
+
+### Frontend Environment
+
+The frontend uses TypeScript files in `frontend/src/environments/`:
+
+**Development** (`environment.ts`):
+```typescript
+const firebaseConfig = {
+  apiKey: 'your-firebase-api-key',
+  authDomain: 'your-project.firebaseapp.com',
+  projectId: 'your-project-id',
+  storageBucket: 'your-project.firebasestorage.app',
+  messagingSenderId: 'your-sender-id',
+  appId: 'your-app-id',
+  measurementId: 'your-measurement-id'
+};
+
+export const environment = {
+  production: false,
+  firebase: firebaseConfig,
+  apiUrl: 'http://localhost:8000',    // Backend API URL
+  wsUrl: 'ws://localhost:8000'        // WebSocket URL
+};
+```
+
+**Production** (`environment.prod.ts`):
+```typescript
+const firebaseConfig = {
+  // Same Firebase config as development
+};
+
+export const environment = {
+  production: true,
+  firebase: firebaseConfig,
+  apiUrl: '/api',     // Relative API URL for production
+  wsUrl: '/ws'        // Relative WebSocket URL for production
+};
+```
+
+## Files Ignored by Git (.gitignore)
+
+The following files and directories are ignored by Git and must be created locally:
+
+- `backend/.env` - Backend environment variables (copy from `.env.example`)
+- `backend/discussion-forum-a7895-firebase-adminsdk-fbsvc-15ca88afde.json` - Firebase service account credentials (download from Firebase Console)
+- `backend/.venv/` - Python virtual environment
+- `backend/__pycache__/` - Python bytecode cache
+- `backend/.pytest_cache/` - Pytest cache
+- `frontend/node_modules/` - Node.js dependencies
+- `frontend/.angular/` - Angular build cache
+- `*.log` - Log files
+- `.DS_Store` - macOS system files
+
+## API Endpoints
+
+Once the backend is running, visit http://localhost:8000/docs for interactive API documentation.
+
+Key endpoints:
+- `GET /api/threads` - List discussion threads
+- `POST /api/threads` - Create new thread
+- `GET /api/threads/{id}/posts` - Get posts in a thread
+- `POST /api/posts` - Create new post
+- `WebSocket /ws/{thread_id}` - Real-time updates for threads
+
+## Testing
+
+### Backend Tests
+```powershell
+cd backend
+pytest
+```
+
+### Frontend Tests
+```powershell
+cd frontend
+npm test
+```
+
+## Development Scripts
+
+### Backend
+- `scripts/start-local.ps1` - PowerShell script to start local backend
+
+### Frontend
+- `npm start` - Start development server
+- `npm run build` - Build for production
+- `npm test` - Run unit tests
+
+## Database Migrations
+
+The project uses Alembic for database migrations:
+
+```powershell
+cd backend
+# Create new migration
+alembic revision --autogenerate -m "Migration message"
+
+# Apply migrations
+alembic upgrade head
+
+# Downgrade
+alembic downgrade -1
+```
+
+## Deployment
+
+### Production Considerations
+
+1. **Environment Variables**: Use production-grade secrets management
+2. **Firebase Credentials**: Store securely, not in repository
+3. **Database**: Use managed PostgreSQL service
+4. **Redis**: Use managed Redis service
+5. **SSL/TLS**: Enable HTTPS
+6. **Container Registry**: Push images to registry for deployment
+
+### Docker Production Build
+
+```powershell
+# Build production images
+docker-compose -f docker-compose.prod.yml build
+
+# Deploy
+docker-compose -f docker-compose.prod.yml up -d
+```
 
 ## Troubleshooting
 
-- Frontend not accessible from host
-	- The Angular dev server binds to `localhost` by default. The Compose `frontend` service is configured to run `ng serve --host 0.0.0.0 --port 4200` so it binds to all interfaces inside the container and Compose maps the container `4200` to the host `4200`. If you cannot access `http://localhost:4200`:
-		- Ensure the container is running: `docker-compose ps`.
-		- Check logs: `docker-compose logs frontend --tail=200`.
-		- Test with curl from host: `curl http://localhost:4200 -UseBasicParsing` (PowerShell).
-		- Check firewall/antivirus or proxies that might block the port.
+### Frontend Not Accessible
+- Ensure Angular dev server is binding to all interfaces: `ng serve --host 0.0.0.0`
+- Check firewall/antivirus blocking port 4200
+- Verify container is running: `docker-compose ps`
 
-- Backend fails with missing env vars
-	- Ensure `backend/.env` exists and Compose `env_file` is present. The backend `Settings` uses Pydantic and requires several fields; supplying them via the `.env` file or `environment` in Compose fixes missing-field errors.
+### Backend Environment Errors
+- Ensure `backend/.env` exists and all required variables are set
+- Check database connectivity
+- Verify Firebase credentials file exists and path is correct
 
-- Alembic/DB connection errors
-	- Ensure Postgres is ready before running migrations. You can wait a few seconds or retry the `alembic upgrade head` command until it connects.
+### Database Connection Issues
+- Ensure PostgreSQL is running and accessible
+- Wait for database to be ready before running migrations
+- Check connection string in `.env`
 
----
+### WebSocket Connection Failed
+- Verify Redis is running and accessible
+- Check WebSocket URL in frontend environment
+- Ensure backend WebSocket endpoint is running
 
-## Optional improvements (ideas)
+### Firebase Authentication Issues
+- Verify Firebase project configuration
+- Ensure service account JSON file is valid and accessible
+- Check Firebase project ID matches in both backend and frontend
 
-- Run `alembic upgrade head` automatically from the backend entrypoint with a wait-and-retry loop.
-- Use Docker secrets for `SECRET_KEY` and DB password.
-- Add healthchecks for `db` and `backend` services in `docker-compose.yml`.
+### Docker Compose Issues
+- Ensure Docker and Docker Compose are installed
+- Check for port conflicts (4200, 8000, 5432, 6379)
+- Rebuild images if changes don't take effect: `docker-compose up -d --build`
 
----
+## Contributing
 
-If you want, I can implement automatic migrations on backend startup and add healthchecks — tell me which you prefer and I'll add the changes.
+1. Fork the repository
+2. Create a feature branch: `git checkout -b feature/your-feature`
+3. Make your changes
+4. Run tests: `pytest` (backend) and `npm test` (frontend)
+5. Commit changes: `git commit -am 'Add your feature'`
+6. Push to branch: `git push origin feature/your-feature`
+7. Create a Pull Request
+
+## License
+
+This project is licensed under the MIT License - see the LICENSE file for details.
+
+## Acknowledgments
+
+- FastAPI for the robust backend framework
+- Angular for the frontend framework
+- Firebase for authentication
+- PostgreSQL and Redis for data persistence and caching
 

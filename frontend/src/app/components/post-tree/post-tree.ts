@@ -23,6 +23,7 @@ export class PostTree {
     // local reply state
     replyOpen: Record<number, boolean> = {};
     replyContent: Record<number, string> = {};
+    replyImage: Record<number, File | null> = {};
     replying: Record<number, boolean> = {};
 
     constructor(private svc: ThreadsService, private auth: AuthService, private toast: ToastService) { }
@@ -47,10 +48,19 @@ export class PostTree {
         return false;
     }
 
+    canReply(): boolean {
+        // check if current user is a member of the thread
+        if (this.myUserId && this.threadMembers && Array.isArray(this.threadMembers)) {
+            return this.threadMembers.some((m: any) => m.user_id === this.myUserId);
+        }
+        return false;
+    }
+
     toggleReply(postId: number) {
         this.replyOpen[postId] = !this.replyOpen[postId];
         if (!this.replyOpen[postId]) {
             this.replyContent[postId] = '';
+            this.replyImage[postId] = null;
         }
     }
 
@@ -63,8 +73,9 @@ export class PostTree {
             return;
         }
         try {
-            await this.svc.replyToPost(postId, content);
+            await this.svc.replyToPost(postId, content, this.replyImage[postId] || undefined);
             this.replyContent[postId] = '';
+            this.replyImage[postId] = null;
             this.replyOpen[postId] = false;
             this.updated.emit();
         } catch (err: any) {
@@ -73,6 +84,17 @@ export class PostTree {
         } finally {
             this.replying[postId] = false;
         }
+    }
+
+    onReplyFileSelected(postId: number, event: any) {
+        const file = event.target.files[0];
+        if (file) {
+            this.replyImage[postId] = file;
+        }
+    }
+
+    removeReplyImage(postId: number) {
+        this.replyImage[postId] = null;
     }
 
     // delete a post (admin or owner allowed)

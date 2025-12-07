@@ -23,6 +23,7 @@ export class ThreadDetail implements OnDestroy {
     posts: any[] = [];
     activeTab: 'posts' | 'create' | 'members' | 'admin' = 'posts';
     newPostContent = '';
+    selectedImage: File | null = null;
     creatingPost = false;
 
     // store DB user id for exact membership checks
@@ -30,6 +31,9 @@ export class ThreadDetail implements OnDestroy {
 
     // leave confirmation modal state
     showLeaveConfirm = false;
+
+    // delete thread confirmation modal state
+    showDeleteConfirm = false;
 
     // websocket
     private ws: WebSocket | null = null;
@@ -127,10 +131,17 @@ export class ThreadDetail implements OnDestroy {
         }
         try {
             const token = this.auth.getIdToken();
+            const formData = new FormData();
+            formData.append('thread_id', id.toString());
+            formData.append('content', this.newPostContent);
+            if (this.selectedImage) {
+                formData.append('image', this.selectedImage);
+            }
             const headers = token ? new HttpHeaders({ Authorization: `Bearer ${token}` }) : undefined;
-            const obs = this.http.post(`http://localhost:8000/posts`, { thread_id: id, content: this.newPostContent }, { headers });
+            const obs = this.http.post(`http://localhost:8000/posts`, formData, { headers });
             await firstValueFrom(obs);
             this.newPostContent = '';
+            this.selectedImage = null;
             // reload posts and switch to posts tab
             await this.load();
             this.activeTab = 'posts';
@@ -140,6 +151,13 @@ export class ThreadDetail implements OnDestroy {
             this.toast.show(msg ?? 'An unknown error occurred', 'error', 5000);
         } finally {
             this.creatingPost = false;
+        }
+    }
+
+    onFileSelected(event: any) {
+        const file = event.target.files[0];
+        if (file) {
+            this.selectedImage = file;
         }
     }
 
@@ -202,9 +220,7 @@ export class ThreadDetail implements OnDestroy {
             console.error('join error', err);
             this.toast.show(err?.error?.detail ?? err?.error ?? err?.message ?? 'Could not join thread', 'error', 5000);
         }
-    }
-
-    // WebSocket helpers
+    }    // WebSocket helpers
     private async connectWS(threadId: number) {
         this.disconnectWS();
         const token = this.auth.getIdToken();
@@ -397,9 +413,7 @@ export class ThreadDetail implements OnDestroy {
             if (m.email && user.email && m.email === user.email) return true;
             return false;
         });
-    }
-
-    // Promote a member through roles (calls backend /threads/{thread_id}/promote/{user_id})
+    }    // Promote a member through roles (calls backend /threads/{thread_id}/promote/{user_id})
     async promoteMember(userId: number) {
         const id = Number(this.route.snapshot.paramMap.get('id'));
         if (!id) return;
@@ -458,6 +472,11 @@ export class ThreadDetail implements OnDestroy {
         this.showLeaveConfirm = true;
     }
 
+    // show delete thread confirmation modal
+    confirmDeleteThread() {
+        this.showDeleteConfirm = true;
+    }
+
     selectTab(tab: 'posts' | 'create' | 'members' | 'admin') {
         if (tab === 'admin' && !this.isAdmin()) {
             this.toast.show('Only thread admins can view this panel.', 'error', 4000);
@@ -480,6 +499,22 @@ export class ThreadDetail implements OnDestroy {
         } catch (err: any) {
             console.error('leave error', err);
             this.toast.show(err?.error?.detail ?? err?.error ?? err?.message ?? 'Could not leave thread', 'error', 5000);
+        }
+    }
+
+    // user confirmed deleting thread
+    async deleteConfirmed() {
+        this.showDeleteConfirm = false;
+        const id = Number(this.route.snapshot.paramMap.get('id'));
+        if (!id) return;
+        try {
+            await this.svc.deleteThread(id);
+            this.toast.show('Thread deleted successfully', 'success', 4000);
+            // navigate back to threads list
+            this.router.navigate(['/threads']);
+        } catch (err: any) {
+            console.error('delete thread error', err);
+            this.toast.show(err?.error?.detail ?? err?.error ?? err?.message ?? 'Could not delete thread', 'error', 5000);
         }
     }
 

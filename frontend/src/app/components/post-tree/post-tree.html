@@ -12,9 +12,12 @@
         </div>
 
         <div class="post-content">{{ p.content }}</div>
+        <div *ngIf="p.image_url" class="post-image">
+            <img [src]="p.image_url" alt="Post image" class="post-img">
+        </div>
 
         <div class="post-actions">
-            <button class="action-btn reply" (click)="toggleReply(p.id)">
+            <button *ngIf="canReply()" class="action-btn reply" (click)="toggleReply(p.id)">
                 <span class="action-icon">↩️</span>
                 <span>Reply</span>
             </button>
@@ -28,6 +31,14 @@
         <div class="reply-box" *ngIf="replyOpen[p.id]">
             <textarea class="reply-textarea" [(ngModel)]="replyContent[p.id]" (input)="typing.emit()"
                 placeholder="Write your reply..."></textarea>
+            <div class="image-upload">
+                <input type="file" accept="image/*" (change)="onReplyFileSelected(p.id, $event)" style="display: none"
+                    #fileInput>
+                <button type="button" class="image-btn" (click)="fileInput.click()">📎 Attach Image</button>
+                <span *ngIf="replyImage[p.id]" class="image-name">{{ replyImage[p.id]!.name }}</span>
+                <button *ngIf="replyImage[p.id]" type="button" class="remove-btn"
+                    (click)="removeReplyImage(p.id)">❌</button>
+            </div>
             <div class="reply-actions">
                 <button class="reply-btn" (click)="toggleReply(p.id)">Cancel</button>
                 <button class="reply-btn primary" (click)="replyTo(p.id)"

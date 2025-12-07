@@ -32,6 +32,7 @@ class UserWithThreads(UserRead):
 class PostRead(BaseModel):
     id: int
     content: str
+    image_url: Optional[str] = None
     parent_id: Optional[int] = None
     user: UserRead
     created_at: datetime
