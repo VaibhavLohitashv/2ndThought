@@ -25,7 +25,10 @@ async def test_thread_and_post_flow(db_session):
     transport = ASGITransport(app=app)
     async with AsyncClient(transport=transport, base_url="http://test") as ac:
         # create thread
-        resp = await ac.post("/threads/", json={"title": "T1", "description": "d"})
+        resp = await ac.post(
+            "/threads/",
+            json={"title": "Test Thread", "description": "Test Description"},
+        )
         assert resp.status_code == 200
         tid = resp.json()["thread"]["id"]
 

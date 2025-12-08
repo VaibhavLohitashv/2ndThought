@@ -192,8 +192,7 @@ async def reply_to_post(
     current_user: Any = Depends(get_current_user),
     db: AsyncSession = Depends(get_db),
 ):
-    parent_res = await db.execute(select(Post).where(Post.id == post_id))
-    parent = parent_res.scalar_one_or_none()
+    parent = await db.get(Post, post_id)
     if not parent:
         raise HTTPException(
             status_code=status.HTTP_404_NOT_FOUND, detail="Parent post not found"
@@ -467,7 +466,11 @@ async def delete_post(
 # GET ALL POSTS FOR A THREAD (TREE)
 # -------------------------
 @router.get("/thread/{thread_id}", response_model=PostsResponse)
-async def get_posts(thread_id: int, db: AsyncSession = Depends(get_db)):
+async def get_posts(
+    thread_id: int,
+    db: AsyncSession = Depends(get_db),
+    current_user: Any = Depends(get_current_user),
+):
     res = await db.execute(
         select(Post)
         .where(Post.thread_id == thread_id)

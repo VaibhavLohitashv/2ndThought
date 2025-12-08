@@ -1,3 +1,9 @@
+import sys
+import os
+
+# Add the project root to sys.path
+sys.path.insert(0, os.path.abspath(os.path.join(os.path.dirname(__file__), "../")))
+
 import asyncio
 
 import pytest
@@ -5,7 +11,7 @@ import pytest_asyncio
 from sqlalchemy.ext.asyncio import AsyncSession, create_async_engine
 from sqlalchemy.orm import sessionmaker
 
-from app.database import models
+from app.database.models import Base
 from app.main import app
 
 DATABASE_URL = "sqlite+aiosqlite:///:memory:"
@@ -22,7 +28,7 @@ def event_loop():
 async def engine():
     engine = create_async_engine(DATABASE_URL, future=True)
     async with engine.begin() as conn:
-        await conn.run_sync(models.Base.metadata.create_all)
+        await conn.run_sync(Base.metadata.create_all)
     yield engine
     await engine.dispose()
 
