@@ -5,7 +5,7 @@ This module handles API endpoints related to posts, including creation,
 retrieval, and real-time updates via WebSockets.
 """
 
-from typing import Any, List
+from typing import Any, List, AsyncGenerator
 from fastapi import APIRouter, Depends, HTTPException, status, UploadFile, File, Form
 from fastapi.responses import StreamingResponse
 from io import BytesIO
@@ -26,7 +26,7 @@ from app.utils.websocket_manager import manager
 router = APIRouter(tags=["Posts"])
 
 
-async def get_db() -> AsyncSession:
+async def get_db() -> AsyncGenerator[AsyncSession, None]:
     """
     Dependency to get an async database session.
 
@@ -155,8 +155,6 @@ async def create_post(
     except Exception as e:
         # Log the exception or handle it appropriately
         print(f"Error publishing thread event: {e}")
-    except Exception:
-        pass
     # notify all thread members (except author)
     try:
         members_res = await db.execute(
