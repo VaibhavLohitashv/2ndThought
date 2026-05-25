@@ -15,6 +15,9 @@ from sqlalchemy.orm import declarative_base, relationship
 
 Base = declarative_base()
 
+# SECURITY: Define constant to avoid duplicating literal string
+USERS_TABLE_ID = "users.id"
+
 
 # Role inside a specific thread
 class ThreadRole(enum.Enum):
@@ -45,7 +48,7 @@ class Thread(Base):
     title = Column(String, nullable=False)
     description = Column(Text)
 
-    created_by = Column(Integer, ForeignKey("users.id"), nullable=False)
+    created_by = Column(Integer, ForeignKey(USERS_TABLE_ID), nullable=False)
     created_at = Column(DateTime(timezone=True), server_default=func.now())
 
     # thread.memberships -> list of ThreadMembership
@@ -60,7 +63,7 @@ class ThreadMembership(Base):
 
     id = Column(Integer, primary_key=True)
 
-    user_id = Column(Integer, ForeignKey("users.id"), nullable=False)
+    user_id = Column(Integer, ForeignKey(USERS_TABLE_ID), nullable=False)
     thread_id = Column(Integer, ForeignKey("threads.id"), nullable=False)
 
     role = Column(Enum(ThreadRole), nullable=False, server_default="participant")
@@ -83,7 +86,7 @@ class Post(Base):
     image_data = Column(LargeBinary, nullable=True)
     image_filename = Column(String, nullable=True)
 
-    user_id = Column(Integer, ForeignKey("users.id"), nullable=False)
+    user_id = Column(Integer, ForeignKey(USERS_TABLE_ID), nullable=False)
     created_at = Column(DateTime(timezone=True), server_default=func.now())
 
     # Relationships
