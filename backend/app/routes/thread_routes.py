@@ -5,7 +5,7 @@ This module handles API endpoints related to threads, including creation,
 membership management, and role updates with real-time notifications.
 """
 
-from typing import Any, List
+from typing import Any, AsyncGenerator, List
 
 from sqlalchemy import or_
 
@@ -23,8 +23,11 @@ from app.utils.websocket_manager import manager
 
 router = APIRouter(tags=["Threads"])
 
+# SECURITY: Define constant to prevent string duplication and ensure consistency
+THREAD_NOT_FOUND = "Thread not found"
 
-async def get_db() -> AsyncSession:
+
+async def get_db() -> AsyncGenerator[AsyncSession, None]:
     """
     Dependency to get an async database session.
 
@@ -115,7 +118,7 @@ async def get_thread(thread_id: int, db: AsyncSession = Depends(get_db)):
     thread = result.scalar_one_or_none()
     if not thread:
         raise HTTPException(
-            status_code=status.HTTP_404_NOT_FOUND, detail="Thread not found"
+            status_code=status.HTTP_404_NOT_FOUND, detail=THREAD_NOT_FOUND
         )
     members_res = await db.execute(
         select(ThreadMembership).where(ThreadMembership.thread_id == thread_id)
@@ -203,7 +206,7 @@ async def update_thread(
     thread = result.scalar_one_or_none()
     if not thread:
         raise HTTPException(
-            status_code=status.HTTP_404_NOT_FOUND, detail="Thread not found"
+            status_code=status.HTTP_404_NOT_FOUND, detail=THREAD_NOT_FOUND
         )
 
     mem = (
@@ -254,7 +257,7 @@ async def delete_thread(
     thread = result.scalar_one_or_none()
     if not thread:
         raise HTTPException(
-            status_code=status.HTTP_404_NOT_FOUND, detail="Thread not found"
+            status_code=status.HTTP_404_NOT_FOUND, detail=THREAD_NOT_FOUND
         )
 
     mem = (
@@ -499,7 +502,7 @@ async def join_thread(
     thread = thread_res.scalar_one_or_none()
     if not thread:
         raise HTTPException(
-            status_code=status.HTTP_404_NOT_FOUND, detail="Thread not found"
+            status_code=status.HTTP_404_NOT_FOUND, detail=THREAD_NOT_FOUND
         )
 
     existing = (
