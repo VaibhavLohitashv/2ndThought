@@ -18,6 +18,9 @@ down_revision: Union[str, Sequence[str], None] = None
 branch_labels: Union[str, Sequence[str], None] = None
 depends_on: Union[str, Sequence[str], None] = None
 
+# SECURITY: Define constant to avoid duplicating literal and ensure consistency
+_DEFAULT_TIMESTAMP = "now()"
+
 
 def upgrade() -> None:
     """Upgrade schema."""
@@ -32,7 +35,7 @@ def upgrade() -> None:
         sa.Column(
             "created_at",
             sa.DateTime(timezone=True),
-            server_default=sa.text("now()"),
+            server_default=sa.text(_DEFAULT_TIMESTAMP),
             nullable=True,
         ),
         sa.PrimaryKeyConstraint("id"),
@@ -48,7 +51,7 @@ def upgrade() -> None:
         sa.Column(
             "created_at",
             sa.DateTime(timezone=True),
-            server_default=sa.text("now()"),
+            server_default=sa.text(_DEFAULT_TIMESTAMP),
             nullable=True,
         ),
         sa.ForeignKeyConstraint(
@@ -67,7 +70,7 @@ def upgrade() -> None:
         sa.Column(
             "created_at",
             sa.DateTime(timezone=True),
-            server_default=sa.text("now()"),
+            server_default=sa.text(_DEFAULT_TIMESTAMP),
             nullable=True,
         ),
         sa.ForeignKeyConstraint(
@@ -98,7 +101,7 @@ def upgrade() -> None:
         sa.Column(
             "joined_at",
             sa.DateTime(timezone=True),
-            server_default=sa.text("now()"),
+            server_default=sa.text(_DEFAULT_TIMESTAMP),
             nullable=True,
         ),
         sa.ForeignKeyConstraint(
