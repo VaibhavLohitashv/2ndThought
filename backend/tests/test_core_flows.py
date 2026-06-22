@@ -23,7 +23,8 @@ async def test_thread_and_post_flow(db_session):
     app.dependency_overrides[real_get_current_user] = _get_user
 
     transport = ASGITransport(app=app)
-    async with AsyncClient(transport=transport, base_url="http://test") as ac:
+    # SECURITY: Use https in test base_url to avoid insecure protocol warning
+    async with AsyncClient(transport=transport, base_url="https://test") as ac:
         # create thread
         resp = await ac.post(
             "/threads/",
